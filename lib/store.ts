@@ -52,7 +52,7 @@ interface AppState {
   setCustomBackgroundColor: (color: string) => void;
   setSheetSizeId: (id: string) => void;
   
-  addPerson: (id: string, originalPhotoUrl: string) => void;
+  addPerson: (id: string, previewPhotoUrl: string, highResPhotoUrl: string) => void;
   updatePerson: (id: string, updates: Partial<Person>) => void;
   removePerson: (id: string) => void;
   setActivePersonId: (id: string) => void;
@@ -82,8 +82,16 @@ export const useAppStore = create<AppState>()(
       setCustomBackgroundColor: (customBackgroundColor) => set({ customBackgroundColor }),
       setSheetSizeId: (sheetSizeId) => set({ sheetSizeId }),
 
-      addPerson: (id, originalPhotoUrl) => set((state) => {
-        const newPerson: Person = { id, originalPhotoUrl, croppedPhotoUrl: null, finalPhotoUrl: null, count: 4 };
+      addPerson: (id, previewPhotoUrl, highResPhotoUrl) => set((state) => {
+        const newPerson: Person = { 
+          id, 
+          previewPhotoUrl, 
+          highResPhotoUrl, 
+          croppedPhotoUrl: null, 
+          finalPhotoUrl: null, 
+          highResFinalUrl: null,
+          count: 4 
+        };
         return { 
           people: [...state.people, newPerson],
           activePersonId: id
@@ -110,6 +118,14 @@ export const useAppStore = create<AppState>()(
     {
       name: 'passport-snap-storage',
       storage: createJSONStorage(() => idbStorage),
+      partialize: (state) => ({
+        ...state,
+        people: state.people.map(p => ({
+          ...p,
+          highResPhotoUrl: null,
+          highResFinalUrl: null
+        }))
+      }),
     }
   )
 );

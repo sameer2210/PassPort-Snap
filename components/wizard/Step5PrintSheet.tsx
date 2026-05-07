@@ -40,11 +40,12 @@ export function Step5PrintSheet() {
       let row = 0;
 
       for (const person of people) {
-        if (!person.finalPhotoUrl) continue;
+        const urlToUse = person.highResFinalUrl || person.finalPhotoUrl;
+        if (!urlToUse) continue;
         
         // Wait for image to load to get dimensions for jsPDF
         const img = new Image();
-        img.src = person.finalPhotoUrl;
+        img.src = urlToUse;
         await new Promise(resolve => { img.onload = resolve; });
 
         for (let i = 0; i < person.count; i++) {
@@ -68,6 +69,14 @@ export function Step5PrintSheet() {
       
       // Run cleanup after generating/exporting PDFs
       await cleanupSessions();
+      
+      // Discard heavy original from memory after successful export
+      const { updatePerson } = useAppStore.getState();
+      people.forEach(p => {
+        if (p.highResPhotoUrl || p.highResFinalUrl) {
+          updatePerson(p.id, { highResPhotoUrl: null, highResFinalUrl: null });
+        }
+      });
     } catch (err) {
       console.error(err);
       alert('Something went wrong making the PDF. Try again.');

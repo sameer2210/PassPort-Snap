@@ -11,7 +11,9 @@ export function Step4Background() {
     // In part 8, this will run RMBG-1.4 model
     // For now, just save cropped photo as final
     if (person) {
-      updatePerson(person.id, { finalPhotoUrl: person.croppedPhotoUrl || person.originalPhotoUrl });
+      updatePerson(person.id, { 
+        finalPhotoUrl: person.croppedPhotoUrl || person.previewPhotoUrl 
+      });
       setStep(5);
     }
   };

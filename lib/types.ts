@@ -12,9 +12,11 @@ export type BackgroundChoice = 'original' | 'white' | 'blue' | 'custom';
 
 export type Person = {
   id: string;
-  originalPhotoUrl: string | null;
+  previewPhotoUrl: string | null; // Compressed Data URL (persisted)
+  highResPhotoUrl: string | null; // Blob URL (in-memory only)
   croppedPhotoUrl: string | null;
-  finalPhotoUrl: string | null; // After BG removal/enhancement
+  finalPhotoUrl: string | null;
+  highResFinalUrl: string | null; // High quality blob URL for print
   count: number;
 };
 

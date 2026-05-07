@@ -25,9 +25,13 @@ export function Step3Adjust() {
   }, []);
 
   const handleSave = async () => {
-    // Mocking cropped photo creation. For now we just use the original.
-    if (person && person.originalPhotoUrl) {
-      updatePerson(person.id, { croppedPhotoUrl: person.originalPhotoUrl });
+    // Mocking cropped photo creation. For now we just use the preview.
+    if (person && person.previewPhotoUrl) {
+      updatePerson(person.id, { 
+        croppedPhotoUrl: person.previewPhotoUrl,
+        // In the future, we'd also apply the crop to highResPhotoUrl and save it as highResFinalUrl
+        highResFinalUrl: person.highResPhotoUrl || null
+      });
       setStep(4);
     }
   };
@@ -41,14 +45,17 @@ export function Step3Adjust() {
     setSharpness(0);
   };
 
-  if (!person || !person.originalPhotoUrl) return null;
+  // Provide a fallback if the session was restored and highResPhotoUrl is null, previewPhotoUrl will still be there.
+  const photoUrlToEdit = person?.previewPhotoUrl;
+
+  if (!person || !photoUrlToEdit) return null;
 
   return (
     <div className="w-full max-w-4xl mx-auto p-4 flex flex-col md:flex-row gap-6">
       <div className="flex-1 space-y-4">
         <div className="relative h-[400px] w-full bg-black rounded-xl overflow-hidden" style={{ filter: `brightness(${brightness}%) contrast(${contrast}%)` }}>
           <Cropper
-            image={person.originalPhotoUrl}
+            image={photoUrlToEdit}
             crop={crop}
             zoom={zoom}
             rotation={rotation}
