@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAppStore } from '@/lib/store';
+import { cleanupSessions } from '@/lib/storage';
 import { Step1PhotoType } from './Step1PhotoType';
 import { Step2Upload } from './Step2Upload';
 import { Step3Adjust } from './Step3Adjust';
@@ -13,6 +14,9 @@ export function Wizard() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // Run storage cleanup on app startup
+    cleanupSessions().catch(console.error);
+
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);

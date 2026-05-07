@@ -10,13 +10,19 @@ export function Step2Upload() {
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
       const file = acceptedFiles[0];
-      const imageUrl = URL.createObjectURL(file);
-      const newPersonId = Math.random().toString(36).substring(7);
+      const reader = new FileReader();
       
-      addPerson(newPersonId, imageUrl);
+      reader.onload = () => {
+        const imageUrl = reader.result as string;
+        const newPersonId = Math.random().toString(36).substring(7);
+        
+        addPerson(newPersonId, imageUrl);
+        
+        // In part 6 this will auto-crop, for now we go to manual step 3
+        setStep(3);
+      };
       
-      // In part 6 this will auto-crop, for now we go to manual step 3
-      setStep(3);
+      reader.readAsDataURL(file);
     }
   }, [addPerson, setStep]);
 

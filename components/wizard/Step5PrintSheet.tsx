@@ -3,6 +3,7 @@ import { useAppStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { jsPDF } from 'jspdf';
 import { templates, sheetSizes } from '@/lib/config';
+import { cleanupSessions } from '@/lib/storage';
 
 export function Step5PrintSheet() {
   const { people, templateId, sheetSizeId, setSheetSizeId, setStep } = useAppStore();
@@ -64,6 +65,9 @@ export function Step5PrintSheet() {
       }
 
       doc.save('passport-photos.pdf');
+      
+      // Run cleanup after generating/exporting PDFs
+      await cleanupSessions();
     } catch (err) {
       console.error(err);
       alert('Something went wrong making the PDF. Try again.');
@@ -125,7 +129,12 @@ export function Step5PrintSheet() {
           <div className="pt-4 flex gap-4">
             <Button variant="ghost" className="w-full text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => {
               if (window.confirm("Start over with a new photo?")) {
-                useAppStore.setState({ people: [], activePersonId: null, step: 1 });
+                const { resetStore } = useAppStore.getState();
+                if (resetStore) {
+                  resetStore();
+                } else {
+                  useAppStore.setState({ people: [], activePersonId: null, step: 1 });
+                }
               }
             }}>Start Over</Button>
           </div>

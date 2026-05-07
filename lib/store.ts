@@ -1,8 +1,42 @@
 import { create } from 'zustand';
+import { persist, StateStorage, createJSONStorage } from 'zustand/middleware';
+import { get, set, del } from 'idb-keyval';
 import type { PhotoTemplate, BackgroundChoice, Person, SheetSize } from './types';
 import { templates, sheetSizes } from './config';
 
+import { cleanupSessions } from './storage';
+
+// Custom storage for Zustand using idb-keyval (IndexedDB)
+const idbStorage: StateStorage = {
+  getItem: async (name: string): Promise<string | null> => {
+    return (await get(name)) || null;
+  },
+  setItem: async (name: string, value: string): Promise<void> => {
+    await set(name, value);
+    
+    // Extract sessionId to save as an individual session
+    try {
+      const parsed = JSON.parse(value);
+      const sessionId = parsed?.state?.sessionId;
+      if (sessionId) {
+        const sessionKey = `passport_session_${sessionId}`;
+        // Save the full value under the session key
+        await set(sessionKey, value);
+      }
+    } catch (e) {
+      // Ignore parse errors
+    }
+
+    // Run scalable cleanup strategy
+    await cleanupSessions();
+  },
+  removeItem: async (name: string): Promise<void> => {
+    await del(name);
+  },
+};
+
 interface AppState {
+  sessionId: string;
   step: number;
   templateId: string;
   backgroundChoice: BackgroundChoice;
@@ -23,53 +57,59 @@ interface AppState {
   removePerson: (id: string) => void;
   setActivePersonId: (id: string) => void;
   reorderPeople: (newOrder: Person[]) => void;
+  resetStore: () => void;
 }
 
-export const useAppStore = create<AppState>((set) => ({
+const initialState = {
   step: 1,
   templateId: templates[0].id,
-  backgroundChoice: 'original',
+  backgroundChoice: 'original' as BackgroundChoice,
   customBackgroundColor: '#ffffff',
   people: [],
   activePersonId: null,
   sheetSizeId: sheetSizes[0].id,
+};
 
-  setStep: (step) => set({ step }),
-  setTemplateId: (templateId) => {
-    set({ templateId });
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('passport-snap-template', templateId);
+export const useAppStore = create<AppState>()(
+  persist(
+    (set) => ({
+      ...initialState,
+      sessionId: Date.now().toString(),
+
+      setStep: (step) => set({ step }),
+      setTemplateId: (templateId) => set({ templateId }),
+      setBackgroundChoice: (backgroundChoice) => set({ backgroundChoice }),
+      setCustomBackgroundColor: (customBackgroundColor) => set({ customBackgroundColor }),
+      setSheetSizeId: (sheetSizeId) => set({ sheetSizeId }),
+
+      addPerson: (id, originalPhotoUrl) => set((state) => {
+        const newPerson: Person = { id, originalPhotoUrl, croppedPhotoUrl: null, finalPhotoUrl: null, count: 4 };
+        return { 
+          people: [...state.people, newPerson],
+          activePersonId: id
+        };
+      }),
+      
+      updatePerson: (id, updates) => set((state) => ({
+        people: state.people.map(p => p.id === id ? { ...p, ...updates } : p)
+      })),
+
+      removePerson: (id) => set((state) => {
+        const newPeople = state.people.filter(p => p.id !== id);
+        return {
+          people: newPeople,
+          activePersonId: state.activePersonId === id ? (newPeople[0]?.id || null) : state.activePersonId
+        };
+      }),
+
+      setActivePersonId: (activePersonId) => set({ activePersonId }),
+      reorderPeople: (people) => set({ people }),
+      
+      resetStore: () => set({ ...initialState, sessionId: Date.now().toString() }),
+    }),
+    {
+      name: 'passport-snap-storage',
+      storage: createJSONStorage(() => idbStorage),
     }
-  },
-  setBackgroundChoice: (backgroundChoice) => {
-    set({ backgroundChoice });
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('passport-snap-bg', backgroundChoice);
-    }
-  },
-  setCustomBackgroundColor: (customBackgroundColor) => set({ customBackgroundColor }),
-  setSheetSizeId: (sheetSizeId) => set({ sheetSizeId }),
-
-  addPerson: (id, originalPhotoUrl) => set((state) => {
-    const newPerson: Person = { id, originalPhotoUrl, croppedPhotoUrl: null, finalPhotoUrl: null, count: 4 };
-    return { 
-      people: [...state.people, newPerson],
-      activePersonId: id
-    };
-  }),
-  
-  updatePerson: (id, updates) => set((state) => ({
-    people: state.people.map(p => p.id === id ? { ...p, ...updates } : p)
-  })),
-
-  removePerson: (id) => set((state) => {
-    const newPeople = state.people.filter(p => p.id !== id);
-    return {
-      people: newPeople,
-      activePersonId: state.activePersonId === id ? (newPeople[0]?.id || null) : state.activePersonId
-    };
-  }),
-
-  setActivePersonId: (activePersonId) => set({ activePersonId }),
-  reorderPeople: (people) => set({ people }),
-}));
+  )
+);
