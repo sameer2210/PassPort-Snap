@@ -12,9 +12,20 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@types/fabric": "^5.3.11",
+    "clsx": "^2.1.1",
+    "fabric": "^6.9.1",
+    "idb-keyval": "^6.2.2",
+    "jspdf": "^4.2.1",
+    "lucide-react": "^1.14.0",
     "next": "16.2.5",
+    "next-pwa": "^5.6.0",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "react-dropzone": "^15.0.0",
+    "react-easy-crop": "^5.5.7",
+    "tailwind-merge": "^3.5.0",
+    "zustand": "^5.0.13"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
