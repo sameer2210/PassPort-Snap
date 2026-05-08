@@ -161,9 +161,34 @@ export function Step5PrintSheet() {
             transformOrigin: 'center'
           }}
         >
-          {/* We'd render a real grid of photos here in the final version */}
-          <div className="absolute inset-0 flex items-center justify-center text-gray-400 font-medium">
-            Sheet Preview Layout Engine
+          {/* Real grid of photos */}
+          <div 
+            className="absolute inset-0 flex flex-wrap content-start"
+            style={{ 
+              padding: `${marginMm}px`,
+              gap: `${gutterMm}px`
+            }}
+          >
+            {people.flatMap((person) => {
+              return Array.from({ length: person.count }).map((_, i) => (
+                <div 
+                  key={`${person.id}-${i}`}
+                  className="bg-gray-200 overflow-hidden shadow-sm"
+                  style={{
+                    width: `${template.widthMm}px`,
+                    height: `${template.heightMm}px`
+                  }}
+                >
+                  {(person.finalPhotoUrl || person.croppedPhotoUrl || person.previewPhotoUrl) && (
+                    <img 
+                      src={person.finalPhotoUrl || person.croppedPhotoUrl || person.previewPhotoUrl || ''} 
+                      className="w-full h-full object-cover"
+                      alt={`Print copy`}
+                    />
+                  )}
+                </div>
+              ));
+            }).slice(0, capacity)}
           </div>
         </div>
       </div>
