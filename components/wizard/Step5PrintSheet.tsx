@@ -135,9 +135,14 @@ export function Step5PrintSheet() {
             Print via Browser
           </Button>
 
-          <div className="pt-4 flex gap-4">
+          <div className="pt-4 flex flex-col gap-2">
+            <Button variant="secondary" className="w-full" onClick={() => {
+              const { setActivePersonId, setStep } = useAppStore.getState();
+              setActivePersonId('');
+              setStep(2);
+            }}>+ Add Another Photo</Button>
             <Button variant="ghost" className="w-full text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => {
-              if (window.confirm("Start over with a new photo?")) {
+              if (window.confirm("Start over with a new photo? This will clear all current photos.")) {
                 const { resetStore } = useAppStore.getState();
                 if (resetStore) {
                   resetStore();
