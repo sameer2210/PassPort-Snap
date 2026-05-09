@@ -1,12 +1,14 @@
-import React, { useRef, useState } from 'react';
+/* eslint-disable @next/next/no-img-element */
+import React, { useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { jsPDF } from 'jspdf';
 import { templates, sheetSizes } from '@/lib/config';
 import { cleanupSessions } from '@/lib/storage';
+import { Download } from 'lucide-react';
 
 export function Step5PrintSheet() {
-  const { people, templateId, sheetSizeId, setSheetSizeId, setStep } = useAppStore();
+  const { people, templateId, sheetSizeId, setSheetSizeId } = useAppStore();
   const template = templates.find(t => t.id === templateId) || templates[0];
   const sheet = sheetSizes.find(s => s.id === sheetSizeId) || sheetSizes[0];
 
@@ -113,7 +115,22 @@ export function Step5PrintSheet() {
                   {p.finalPhotoUrl && <img src={p.finalPhotoUrl} className="w-10 h-10 object-cover rounded" alt="Person" />}
                   <span className="font-medium text-sm">Person {idx + 1}</span>
                 </div>
-                <span className="text-sm text-gray-500">{p.count} photos</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500">{p.count} photos</span>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    title="Download individual photo"
+                    onClick={() => {
+                      const link = document.createElement('a');
+                      link.href = p.highResFinalUrl || p.finalPhotoUrl || p.croppedPhotoUrl || '';
+                      link.download = `passport-photo-${idx + 1}.jpg`;
+                      link.click();
+                    }}
+                  >
+                    <Download className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>

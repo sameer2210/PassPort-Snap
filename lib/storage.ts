@@ -27,7 +27,7 @@ export async function saveSession(id: string, stateData: unknown) {
     try {
       const existing = JSON.parse(existingStr) as SessionData;
       createdAt = existing.createdAt;
-    } catch (e) {
+    } catch {
       // ignore
     }
   }
@@ -51,7 +51,7 @@ export async function loadSession(id: string): Promise<SessionData | null> {
   if (!dataStr) return null;
   try {
     return JSON.parse(dataStr) as SessionData;
-  } catch (e) {
+  } catch {
     return null;
   }
 }
@@ -74,7 +74,7 @@ export async function cleanupSessions() {
         const size = estimateSize(value);
         sessions.push({ key, session: parsed, size });
         totalSize += size;
-      } catch (e) {
+      } catch {
         // Corrupted session data, delete it immediately
         await del(key);
       }

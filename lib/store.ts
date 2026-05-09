@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, StateStorage, createJSONStorage } from 'zustand/middleware';
 import { get, set, del } from 'idb-keyval';
-import type { PhotoTemplate, BackgroundChoice, Person, SheetSize } from './types';
+import type { BackgroundChoice, Person } from './types';
 import { templates, sheetSizes } from './config';
 
 import { cleanupSessions } from './storage';
@@ -23,7 +23,7 @@ const idbStorage: StateStorage = {
         // Save the full value under the session key
         await set(sessionKey, value);
       }
-    } catch (e) {
+    } catch {
       // Ignore parse errors
     }
 

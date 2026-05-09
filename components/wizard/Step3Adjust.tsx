@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import Cropper from 'react-easy-crop';
 import type { Area } from 'react-easy-crop';
@@ -19,8 +20,6 @@ export function Step3Adjust() {
   
   const [brightness, setBrightness] = useState(100);
   const [contrast, setContrast] = useState(100);
-  const [sharpness, setSharpness] = useState(0);
-
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);

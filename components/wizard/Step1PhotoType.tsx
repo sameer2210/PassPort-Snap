@@ -1,8 +1,7 @@
 import React, { useEffect } from 'react';
 import { useAppStore } from '@/lib/store';
 import { templates } from '@/lib/config';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 export function Step1PhotoType() {
   const { templateId, setTemplateId, setStep } = useAppStore();
