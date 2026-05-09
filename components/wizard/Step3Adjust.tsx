@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import Cropper from 'react-easy-crop';
+import type { Area } from 'react-easy-crop';
 import { useAppStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -31,7 +32,7 @@ export function Step3Adjust() {
     initializeFaceDetector();
   }, []);
 
-  const onCropComplete = useCallback((croppedArea: any, croppedAreaPixelsData: any) => {
+  const onCropComplete = useCallback((_croppedArea: Area, croppedAreaPixelsData: Area) => {
     setCroppedAreaPixels(croppedAreaPixelsData);
   }, []);
 
@@ -202,4 +203,3 @@ export function Step3Adjust() {
     </div>
   );
 }
-

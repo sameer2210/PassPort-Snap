@@ -9,7 +9,7 @@ export interface SessionData {
   id: string;
   createdAt: number;
   updatedAt: number;
-  data: any; // The Zustand state or photo data
+  data: unknown; // The Zustand state or photo data
 }
 
 // Helper to estimate size of a string (rough estimation for UTF-16)
@@ -17,7 +17,7 @@ function estimateSize(str: string): number {
   return str.length * 2;
 }
 
-export async function saveSession(id: string, stateData: any) {
+export async function saveSession(id: string, stateData: unknown) {
   const sessionKey = `${SESSION_PREFIX}${id}`;
   
   // Try to get existing session to preserve createdAt
