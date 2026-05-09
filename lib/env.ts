@@ -7,13 +7,28 @@ const REQUIRED_ENV_KEYS: RequiredEnvKey[] = [
   "NEXT_PUBLIC_APP_URL",
 ];
 
+const FALLBACK_PUBLIC_ENV: PublicEnv = {
+  NEXT_PUBLIC_APP_NAME: "Passport Snap",
+  NEXT_PUBLIC_APP_URL: "http://localhost:3000",
+};
+
+const isProduction = process.env.NODE_ENV === "production";
+
 function readEnvValue(key: RequiredEnvKey): string {
   const value = process.env[key];
-  if (!value || !value.trim()) {
+  if (value?.trim()) {
+    return value;
+  }
+
+  if (!isProduction) {
     throw new Error(`Missing required environment variable: ${key}`);
   }
 
-  return value;
+  if (key === "NEXT_PUBLIC_APP_URL" && process.env.URL?.trim()) {
+    return process.env.URL;
+  }
+
+  return FALLBACK_PUBLIC_ENV[key];
 }
 
 function buildPublicEnv(): PublicEnv {

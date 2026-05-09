@@ -9,8 +9,10 @@ export async function processBackground(
   }
 
   try {
-    // Generate image blob without background
-    const blob = await removeBackground(imageUrl);
+    // Generate image blob without background using local assets for offline PWA support
+    const blob = await removeBackground(imageUrl, {
+      publicPath: '/assets/models/imgly/'
+    });
     
     // Draw it on a canvas with the new background color
     const canvas = document.createElement('canvas');
