@@ -33,15 +33,10 @@ export async function processBackground(
     // Draw the cutout
     ctx.drawImage(img, 0, 0);
 
-    return new Promise((resolve) => {
-      canvas.toBlob((file) => {
-        if (file) {
-          resolve(URL.createObjectURL(file));
-        } else {
-          resolve(imageUrl);
-        }
-      }, 'image/jpeg', 0.95);
-    });
+    // Return as base64 data URL so it can be safely persisted in IndexedDB across reloads
+    const isTransparent = backgroundColor === 'transparent';
+    const dataUrl = canvas.toDataURL(isTransparent ? 'image/png' : 'image/jpeg', 0.95);
+    return dataUrl;
   } catch (err) {
     console.error('Failed to remove background:', err);
     return imageUrl; // Fallback to original

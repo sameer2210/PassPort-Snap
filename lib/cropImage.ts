@@ -51,14 +51,7 @@ export async function getCroppedImg(
   // paste generated rotate image at the top left corner
   ctx.putImageData(data, 0, 0);
 
-  // As a blob
-  return new Promise((resolve) => {
-    canvas.toBlob((file) => {
-      if (file) {
-        resolve(URL.createObjectURL(file));
-      } else {
-        resolve(null);
-      }
-    }, 'image/jpeg', 0.95);
-  });
+  // Return as base64 data URL so it can be safely persisted in IndexedDB across reloads
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+  return dataUrl;
 }
