@@ -13,7 +13,9 @@ export async function getCroppedImg(
   rotation = 0,
   flip = { horizontal: false, vertical: false },
   brightness = 100,
-  contrast = 100
+  contrast = 100,
+  targetWidth?: number,
+  targetHeight?: number
 ): Promise<string | null> {
   const image = await createImage(imageSrc);
   const canvas = document.createElement('canvas');
@@ -44,12 +46,22 @@ export async function getCroppedImg(
     pixelCrop.height
   );
 
-  // set canvas width to final desired crop size - this will clear existing context
-  canvas.width = pixelCrop.width;
-  canvas.height = pixelCrop.height;
+  // Set canvas width to final desired crop size (target or actual)
+  const finalWidth = targetWidth || pixelCrop.width;
+  const finalHeight = targetHeight || pixelCrop.height;
 
-  // paste generated rotate image at the top left corner
-  ctx.putImageData(data, 0, 0);
+  canvas.width = finalWidth;
+  canvas.height = finalHeight;
+
+  // We need a temporary canvas to hold the cropped imageData so we can scale it
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = pixelCrop.width;
+  tempCanvas.height = pixelCrop.height;
+  const tempCtx = tempCanvas.getContext('2d');
+  tempCtx?.putImageData(data, 0, 0);
+
+  // Draw the cropped image onto the final canvas, scaling it if necessary
+  ctx.drawImage(tempCanvas, 0, 0, pixelCrop.width, pixelCrop.height, 0, 0, finalWidth, finalHeight);
 
   // Return as base64 data URL so it can be safely persisted in IndexedDB across reloads
   const dataUrl = canvas.toDataURL('image/jpeg', 0.95);

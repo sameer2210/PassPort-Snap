@@ -10,9 +10,20 @@ import { detectFace, initializeFaceDetector } from '@/lib/faceDetection';
 import { getCroppedImg } from '@/lib/cropImage';
 
 export function Step3Adjust() {
-  const { people, activePersonId, templateId, setStep, updatePerson } = useAppStore();
+  const { people, activePersonId, templateId, setStep, updatePerson, customTemplateMm } = useAppStore();
   const person = people.find(p => p.id === activePersonId);
-  const template = templates.find(t => t.id === templateId) || templates[0];
+  const baseTemplate = templates.find(t => t.id === templateId) || templates[0];
+  const template = templateId === 'custom' 
+    ? {
+        id: 'custom',
+        label: 'Custom',
+        widthMm: customTemplateMm.widthMm,
+        heightMm: customTemplateMm.heightMm,
+        printWidthPx: Math.round((customTemplateMm.widthMm / 25.4) * 300),
+        printHeightPx: Math.round((customTemplateMm.heightMm / 25.4) * 300),
+        countries: 'Custom'
+      }
+    : baseTemplate;
 
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -87,7 +98,9 @@ export function Step3Adjust() {
         rotation,
         { horizontal: false, vertical: false },
         brightness,
-        contrast
+        contrast,
+        template.printWidthPx,
+        template.printHeightPx
       );
       
       let highResFinalUrl = null;

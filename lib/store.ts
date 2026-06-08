@@ -44,6 +44,7 @@ interface AppState {
   people: Person[];
   activePersonId: string | null;
   sheetSizeId: string;
+  customTemplateMm: { widthMm: number; heightMm: number };
 
   // Actions
   setStep: (step: number) => void;
@@ -51,6 +52,7 @@ interface AppState {
   setBackgroundChoice: (choice: BackgroundChoice) => void;
   setCustomBackgroundColor: (color: string) => void;
   setSheetSizeId: (id: string) => void;
+  setCustomTemplateMm: (dims: { widthMm: number; heightMm: number }) => void;
   
   addPerson: (id: string, previewPhotoUrl: string, highResPhotoUrl: string) => void;
   updatePerson: (id: string, updates: Partial<Person>) => void;
@@ -68,6 +70,7 @@ const initialState = {
   people: [],
   activePersonId: null,
   sheetSizeId: sheetSizes[0].id,
+  customTemplateMm: { widthMm: 35, heightMm: 45 },
 };
 
 export const useAppStore = create<AppState>()(
@@ -81,6 +84,7 @@ export const useAppStore = create<AppState>()(
       setBackgroundChoice: (backgroundChoice) => set({ backgroundChoice }),
       setCustomBackgroundColor: (customBackgroundColor) => set({ customBackgroundColor }),
       setSheetSizeId: (sheetSizeId) => set({ sheetSizeId }),
+      setCustomTemplateMm: (customTemplateMm) => set({ customTemplateMm }),
 
       addPerson: (id, previewPhotoUrl, highResPhotoUrl) => set((state) => {
         const newPerson: Person = { 
