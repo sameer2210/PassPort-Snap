@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import { templates } from '@/lib/config';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -8,14 +8,8 @@ export function Step1PhotoType() {
   const { templateId, setTemplateId, setStep, customTemplateMm, setCustomTemplateMm } = useAppStore();
   const [showCustom, setShowCustom] = useState(templateId === 'custom');
 
-  useEffect(() => {
-    // Check if user previously saved a template, if so, skip to step 2 automatically.
-    const savedTemplate = localStorage.getItem('passport-snap-template');
-    if (savedTemplate && savedTemplate !== 'custom') {
-      setTemplateId(savedTemplate);
-      setStep(2);
-    }
-  }, [setTemplateId, setStep]);
+  // Restored previously saved template via Zustand persistence automatically.
+
 
   const handleSelect = (id: string) => {
     if (id === 'custom') {

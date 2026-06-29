@@ -10,17 +10,19 @@ import { useEffect, useMemo, useState } from 'react';
 export function Step5PrintSheet() {
   const { people, templateId, sheetSizeId, setSheetSizeId, updatePerson, customTemplateMm } = useAppStore();
   const baseTemplate = templates.find(t => t.id === templateId) || templates[0];
-  const template = templateId === 'custom'
-    ? {
-        id: 'custom',
-        label: 'Custom Size',
-        widthMm: customTemplateMm.widthMm,
-        heightMm: customTemplateMm.heightMm,
-        printWidthPx: Math.round((customTemplateMm.widthMm / 25.4) * 300),
-        printHeightPx: Math.round((customTemplateMm.heightMm / 25.4) * 300),
-        countries: 'Custom'
-      }
-    : baseTemplate;
+  const template = useMemo(() => {
+    return templateId === 'custom'
+      ? {
+          id: 'custom',
+          label: 'Custom Size',
+          widthMm: customTemplateMm.widthMm,
+          heightMm: customTemplateMm.heightMm,
+          printWidthPx: Math.round((customTemplateMm.widthMm / 25.4) * 300),
+          printHeightPx: Math.round((customTemplateMm.heightMm / 25.4) * 300),
+          countries: 'Custom'
+        }
+      : baseTemplate;
+  }, [templateId, customTemplateMm, baseTemplate]);
 
   const sheet = sheetSizes.find(s => s.id === sheetSizeId) || sheetSizes[0];
 
@@ -37,7 +39,6 @@ export function Step5PrintSheet() {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedPersonId(people[0].id);
     } else if (selectedPersonId && !people.find(p => p.id === selectedPersonId)) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedPersonId(people[0]?.id || null);
     }
   }, [people, selectedPersonId]);
@@ -190,7 +191,7 @@ export function Step5PrintSheet() {
 
       if (showCutlines && gridConfig.rows > 0 && gridConfig.cols > 0) {
         doc.setDrawColor(150);
-        (doc as any).setLineDash([1, 1], 0);
+        ((doc as unknown) as { setLineDash: (dashArray: number[], start: number) => void }).setLineDash([1, 1], 0);
         doc.setLineWidth(0.2);
 
         const totalGridW = gridConfig.cols * template.widthMm + (gridConfig.cols - 1) * gridConfig.gutterMm;
@@ -207,18 +208,13 @@ export function Step5PrintSheet() {
           const y = gridConfig.startY + r * template.heightMm + r * gridConfig.gutterMm - gridConfig.gutterMm / 2;
           doc.line(gridConfig.startX, y, gridConfig.startX + totalGridW, y);
         }
-        (doc as any).setLineDash([]); // Reset dash
+        ((doc as unknown) as { setLineDash: (dashArray: number[]) => void }).setLineDash([]); // Reset dash
       }
 
       doc.save(`passport-photos-${sheet.id}.pdf`);
 
-      // Cleanup
+      // Cleanup IndexDB sessions but preserve in-memory high-res image Blob URLs
       await cleanupSessions();
-      people.forEach(p => {
-        if (p.highResPhotoUrl || p.highResFinalUrl) {
-          updatePerson(p.id, { highResPhotoUrl: null, highResFinalUrl: null });
-        }
-      });
     } catch (err) {
       console.error(err);
       alert('Something went wrong making the PDF. Try again.');

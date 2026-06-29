@@ -2,9 +2,9 @@ import { removeBackground } from '@imgly/background-removal';
 
 export async function processBackground(
   imageUrl: string,
-  backgroundColor: string // 'transparent', '#ffffff', '#e0f2fe'
+  backgroundColor: string // 'original', 'transparent', '#ffffff', '#e0f2fe'
 ): Promise<string> {
-  if (backgroundColor === 'transparent') {
+  if (backgroundColor === 'original') {
     return imageUrl;
   }
 
@@ -26,9 +26,11 @@ export async function processBackground(
     canvas.width = img.width;
     canvas.height = img.height;
 
-    // Fill background
-    ctx.fillStyle = backgroundColor;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Fill background if not transparent
+    if (backgroundColor !== 'transparent') {
+      ctx.fillStyle = backgroundColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
 
     // Draw the cutout
     ctx.drawImage(img, 0, 0);

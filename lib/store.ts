@@ -4,7 +4,7 @@ import { get, set, del } from 'idb-keyval';
 import type { BackgroundChoice, Person } from './types';
 import { templates, sheetSizes } from './config';
 
-import { cleanupSessions } from './storage';
+import { cleanupSessions, registerSessionUpdate } from './storage';
 
 // Custom storage for Zustand using idb-keyval (IndexedDB)
 const idbStorage: StateStorage = {
@@ -22,6 +22,9 @@ const idbStorage: StateStorage = {
         const sessionKey = `passport_session_${sessionId}`;
         // Save the full value under the session key
         await set(sessionKey, value);
+        
+        // Register update in the index for performance-optimized cleanup
+        await registerSessionUpdate(sessionId, value);
       }
     } catch {
       // Ignore parse errors

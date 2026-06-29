@@ -25,15 +25,21 @@ export async function getCroppedImg(
     return null;
   }
 
-  // Set canvas size to match the bounding box
-  canvas.width = image.width;
-  canvas.height = image.height;
+  const rotRad = (rotation * Math.PI) / 180;
+  const cos = Math.abs(Math.cos(rotRad));
+  const sin = Math.abs(Math.sin(rotRad));
+  const canvasWidth = Math.round(image.width * cos + image.height * sin);
+  const canvasHeight = Math.round(image.width * sin + image.height * cos);
 
-  // translate canvas context to a central location to allow rotating and flipping around the center
-  ctx.translate(canvas.width / 2, canvas.height / 2);
-  ctx.rotate((rotation * Math.PI) / 180);
+  // Set canvas size to match the rotated bounding box
+  canvas.width = canvasWidth;
+  canvas.height = canvasHeight;
+
+  // Translate to center of canvas, rotate, scale, and translate back by image center
+  ctx.translate(canvasWidth / 2, canvasHeight / 2);
+  ctx.rotate(rotRad);
   ctx.scale(flip.horizontal ? -1 : 1, flip.vertical ? -1 : 1);
-  ctx.translate(-canvas.width / 2, -canvas.height / 2);
+  ctx.translate(-image.width / 2, -image.height / 2);
 
   ctx.filter = `brightness(${brightness}%) contrast(${contrast}%)`;
   ctx.drawImage(image, 0, 0);
