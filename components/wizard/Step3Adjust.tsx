@@ -113,7 +113,11 @@ export function Step3Adjust() {
 
       updatePerson(person.id, { 
         croppedPhotoUrl: croppedUrl || person.previewPhotoUrl,
-        highResFinalUrl: highResFinalUrl
+        highResFinalUrl: highResFinalUrl,
+        croppedAreaPixels,
+        rotation,
+        brightness,
+        contrast
       });
       setStep(4);
     } catch (e) {

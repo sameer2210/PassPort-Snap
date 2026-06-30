@@ -159,7 +159,7 @@ export function Step5PrintSheet() {
       const loadedImages: Record<string, HTMLImageElement> = {};
 
       for (const person of people) {
-        const urlToUse = person.highResFinalUrl || person.finalPhotoUrl;
+        const urlToUse = person.highResFinalUrl || person.finalPhotoUrl || person.croppedPhotoUrl || person.previewPhotoUrl;
         if (!urlToUse) continue;
         const img = new Image();
         img.src = urlToUse;
@@ -408,9 +408,9 @@ export function Step5PrintSheet() {
                       boxSizing: 'border-box'
                     }}
                   >
-                    {person && (person.finalPhotoUrl || person.croppedPhotoUrl || person.previewPhotoUrl) ? (
+                    {person && (person.highResFinalUrl || person.finalPhotoUrl || person.croppedPhotoUrl || person.previewPhotoUrl) ? (
                       <img
-                        src={person.finalPhotoUrl || person.croppedPhotoUrl || person.previewPhotoUrl || ''}
+                        src={person.highResFinalUrl || person.finalPhotoUrl || person.croppedPhotoUrl || person.previewPhotoUrl || ''}
                         className="w-full h-full object-cover pointer-events-none"
                         alt={`Slot ${i}`}
                       />

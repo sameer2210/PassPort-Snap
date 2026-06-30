@@ -17,7 +17,13 @@ export type Person = {
   croppedPhotoUrl: string | null;
   finalPhotoUrl: string | null;
   highResFinalUrl: string | null; // High quality blob URL for print
+  backgroundPreviewUrl?: string | null; // Temporary background preview (RAM-only)
   count: number;
+  // Adjustment metadata to preserve high-res quality
+  croppedAreaPixels?: { x: number; y: number; width: number; height: number } | null;
+  rotation?: number;
+  brightness?: number;
+  contrast?: number;
 };
 
 export type SheetSize = {

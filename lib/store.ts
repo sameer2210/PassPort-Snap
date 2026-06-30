@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, StateStorage, createJSONStorage } from 'zustand/middleware';
 import { get, set, del } from 'idb-keyval';
 import type { BackgroundChoice, Person } from './types';
+import type { BackgroundStatus } from './background/backgroundTypes';
 import { templates, sheetSizes } from './config';
 
 import { cleanupSessions, registerSessionUpdate } from './storage';
@@ -49,6 +50,12 @@ interface AppState {
   sheetSizeId: string;
   customTemplateMm: { widthMm: number; heightMm: number };
 
+  // Background states
+  backgroundStatus: BackgroundStatus;
+  modelLoaded: boolean;
+  processing: boolean;
+  backgroundError: string | null;
+
   // Actions
   setStep: (step: number) => void;
   setTemplateId: (id: string) => void;
@@ -57,6 +64,11 @@ interface AppState {
   setSheetSizeId: (id: string) => void;
   setCustomTemplateMm: (dims: { widthMm: number; heightMm: number }) => void;
   
+  setBackgroundStatus: (status: BackgroundStatus) => void;
+  setModelLoaded: (loaded: boolean) => void;
+  setProcessing: (processing: boolean) => void;
+  setBackgroundError: (error: string | null) => void;
+
   addPerson: (id: string, previewPhotoUrl: string, highResPhotoUrl: string) => void;
   updatePerson: (id: string, updates: Partial<Person>) => void;
   removePerson: (id: string) => void;
@@ -74,6 +86,10 @@ const initialState = {
   activePersonId: null,
   sheetSizeId: sheetSizes[0].id,
   customTemplateMm: { widthMm: 35, heightMm: 45 },
+  backgroundStatus: 'idle' as BackgroundStatus,
+  modelLoaded: false,
+  processing: false,
+  backgroundError: null as string | null,
 };
 
 export const useAppStore = create<AppState>()(
@@ -89,6 +105,23 @@ export const useAppStore = create<AppState>()(
       setSheetSizeId: (sheetSizeId) => set({ sheetSizeId }),
       setCustomTemplateMm: (customTemplateMm) => set({ customTemplateMm }),
 
+      setBackgroundStatus: (backgroundStatus) => set((state) => {
+        if (state.backgroundStatus === backgroundStatus) return {};
+        return { backgroundStatus };
+      }),
+      setModelLoaded: (modelLoaded) => set((state) => {
+        if (state.modelLoaded === modelLoaded) return {};
+        return { modelLoaded };
+      }),
+      setProcessing: (processing) => set((state) => {
+        if (state.processing === processing) return {};
+        return { processing };
+      }),
+      setBackgroundError: (backgroundError) => set((state) => {
+        if (state.backgroundError === backgroundError) return {};
+        return { backgroundError };
+      }),
+
       addPerson: (id, previewPhotoUrl, highResPhotoUrl) => set((state) => {
         const newPerson: Person = { 
           id, 
@@ -97,6 +130,7 @@ export const useAppStore = create<AppState>()(
           croppedPhotoUrl: null, 
           finalPhotoUrl: null, 
           highResFinalUrl: null,
+          backgroundPreviewUrl: null,
           count: 4 
         };
         return { 
@@ -127,10 +161,14 @@ export const useAppStore = create<AppState>()(
       storage: createJSONStorage(() => idbStorage),
       partialize: (state) => ({
         ...state,
+        backgroundStatus: 'idle' as BackgroundStatus,
+        processing: false,
+        backgroundError: null as string | null,
         people: state.people.map(p => ({
           ...p,
           highResPhotoUrl: null,
-          highResFinalUrl: null
+          highResFinalUrl: null,
+          backgroundPreviewUrl: null
         }))
       }),
     }
