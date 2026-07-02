@@ -1,5 +1,5 @@
-import { PaperSize, PhotoTemplate, LayoutResult, RenderScene } from '../contracts/types';
-import { calculateGrid, LayoutEngineResult } from '../core/layoutEngine';
+import { PaperSize, PhotoTemplate, LayoutResult, RenderScene, LayoutEngineResult } from '../contracts/types';
+import { calculateGrid } from '../core/layoutEngine';
 import { RenderSceneBuilder } from '../core/renderSceneBuilder';
 import { prepareImage, ImageAdjustments } from './imagePreparation/prepare';
 import { GridPrintStrategy } from '../strategies/gridPrintStrategy';
@@ -42,7 +42,6 @@ export const PrintController = {
 
     return RenderSceneBuilder.build({
       layout: res.layout,
-      template,
       slots,
       images: preparedImagesMap,
       addBorder,
@@ -61,46 +60,31 @@ export const PrintController = {
 
     // Single photo bypass layout
     const mockLayout: LayoutResult = {
-      geometry: {
-        cols: 1,
-        rows: 1,
-        capacity: 1,
-        paperWidth: template.widthMm,
-        paperHeight: template.heightMm,
-        usableWidth: template.widthMm,
-        usableHeight: template.heightMm,
-        requiredWidth: template.widthMm,
-        requiredHeight: template.heightMm,
-        coordinates: [{ x: 0, y: 0 }],
-        startX: 0,
-        startY: 0,
-        remainingWidth: 0,
-        remainingHeight: 0
-      },
-      metadata: {
-        paperId: 'single',
-        templateId: template.id,
-        orientation: 'portrait',
-        marginMm: 0,
-        gutterMm: 0,
-        algorithmVersion: '1.0.0',
-        registryVersion: '1.0.0',
-        cacheVersion: '1.0.0'
-      },
-      score: {
-        capacity: 1,
-        paperUtilization: 100,
-        remainingMargins: 0,
-        layoutSymmetry: 100,
-        centering: 100,
-        orientationPreference: 1,
-        overallScore: 99999
-      }
+      rows: 1,
+      columns: 1,
+      slotWidthMm: template.widthMm,
+      slotHeightMm: template.heightMm,
+      marginLeft: 0,
+      marginRight: 0,
+      marginTop: 0,
+      marginBottom: 0,
+      gutterHorizontal: 0,
+      gutterVertical: 0,
+      capacity: 1,
+      photoOrientation: 'normal',
+      photoRotation: 0,
+      rotationRequired: false,
+      coordinates: [{ x: 0, y: 0 }],
+      paperWidthMm: template.widthMm,
+      paperHeightMm: template.heightMm,
+      utilization: 100,
+      paperId: 'single',
+      templateId: template.id,
+      paperOrientation: 'portrait',
     };
 
     return RenderSceneBuilder.build({
       layout: mockLayout,
-      template,
       slots,
       images,
       addBorder: false,

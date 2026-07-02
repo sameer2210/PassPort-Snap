@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAppStore } from '@/lib/store';
-import { PaperRegistry, TemplateRegistry } from '@/lib/print';
+import { PaperRegistry, TemplateRegistry, DpiProfile } from '@/lib/print';
 import { PrintHeader } from '@/components/print/PrintHeader';
 import { PrintToolbar } from '@/components/print/PrintToolbar';
 import { PrintExportActions } from '@/components/print/PrintExportActions';
@@ -35,8 +35,8 @@ export function Step5PrintSheet() {
           label: 'Custom Size',
           widthMm: customTemplateMm.widthMm,
           heightMm: customTemplateMm.heightMm,
-          printWidthPx: Math.round((customTemplateMm.widthMm / 25.4) * 300),
-          printHeightPx: Math.round((customTemplateMm.heightMm / 25.4) * 300),
+          printWidthPx: Math.round((customTemplateMm.widthMm / 25.4) * DpiProfile.Print300),
+          printHeightPx: Math.round((customTemplateMm.heightMm / 25.4) * DpiProfile.Print300),
           countries: 'Custom',
         }
       : baseTemplate;

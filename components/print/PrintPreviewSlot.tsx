@@ -12,7 +12,6 @@ export interface PrintPreviewSlotProps {
   readonly person: Person | undefined;
   readonly slotWidthMm: number;
   readonly slotHeightMm: number;
-  readonly addBorder: boolean;
   readonly onSlotClick: (index: number) => void;
 }
 
@@ -23,7 +22,6 @@ export const PrintPreviewSlot: React.FC<PrintPreviewSlotProps> = React.memo(({
   person,
   slotWidthMm,
   slotHeightMm,
-  addBorder,
   onSlotClick,
 }) => {
   const x = UnitConverter.convert(slot.x, 'mm', 'px', DpiProfile.Preview);
@@ -31,7 +29,6 @@ export const PrintPreviewSlot: React.FC<PrintPreviewSlotProps> = React.memo(({
   const w = UnitConverter.convert(slotWidthMm, 'mm', 'px', DpiProfile.Preview);
   const h = UnitConverter.convert(slotHeightMm, 'mm', 'px', DpiProfile.Preview);
 
-  const borderStyle = addBorder ? '1px solid #000000' : 'none';
   const imageUrl = person
     ? person.finalPhotoUrl ||
       person.croppedPhotoUrl ||
@@ -51,7 +48,6 @@ export const PrintPreviewSlot: React.FC<PrintPreviewSlotProps> = React.memo(({
         top: `${y}px`,
         width: `${w}px`,
         height: `${h}px`,
-        border: borderStyle,
         boxSizing: 'border-box',
       }}
     >

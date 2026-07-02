@@ -1,9 +1,8 @@
-import { LayoutResult, PhotoTemplate, RenderScene, SceneItem, BorderItem, CutLineItem } from '../contracts/types';
+import { LayoutResult, RenderScene, SceneItem, BorderItem, CutLineItem } from '../contracts/types';
 import { PRINT_ENGINE_VERSION } from '../constants/printConstants';
 
 export interface SceneBuildOptions {
   readonly layout: LayoutResult;
-  readonly template: PhotoTemplate;
   readonly slots: readonly (string | null)[];
   readonly images: Record<string, string>; // Maps slot ID to prepared image reference
   readonly addBorder: boolean;
@@ -12,9 +11,21 @@ export interface SceneBuildOptions {
 
 export const RenderSceneBuilder = {
   build: (options: SceneBuildOptions): RenderScene => {
-    const { layout, template, slots, images, addBorder, showCutlines } = options;
-    const { paperWidth, paperHeight, coordinates, cols, rows, startX, startY } = layout.geometry;
-    const { marginMm, gutterMm } = layout.metadata;
+    const { layout, slots, images, addBorder, showCutlines } = options;
+    const {
+      paperWidthMm,
+      paperHeightMm,
+      slotWidthMm,
+      slotHeightMm,
+      marginLeft,
+      marginTop,
+      gutterHorizontal,
+      gutterVertical,
+      rows,
+      columns,
+      coordinates,
+      photoRotation,
+    } = layout;
 
     const items: SceneItem[] = [];
     const borders: BorderItem[] = [];
@@ -29,34 +40,34 @@ export const RenderSceneBuilder = {
         imageRef,
         xMm: coord.x,
         yMm: coord.y,
-        widthMm: template.widthMm,
-        heightMm: template.heightMm,
-        rotationDegrees: 0
+        widthMm: slotWidthMm,
+        heightMm: slotHeightMm,
+        rotationDegrees: photoRotation
       });
 
       if (addBorder && slotRef) {
         borders.push({
           xMm: coord.x,
           yMm: coord.y,
-          widthMm: template.widthMm,
-          heightMm: template.heightMm,
+          widthMm: slotWidthMm,
+          heightMm: slotHeightMm,
           thicknessMm: 0.2,
           colorHex: '#000000'
         });
       }
     });
 
-    if (showCutlines && rows > 0 && cols > 0) {
-      const totalGridW = cols * template.widthMm + (cols - 1) * gutterMm;
-      const totalGridH = rows * template.heightMm + (rows - 1) * gutterMm;
+    if (showCutlines && rows > 0 && columns > 0) {
+      const totalGridW = columns * slotWidthMm + (columns - 1) * gutterHorizontal;
+      const totalGridH = rows * slotHeightMm + (rows - 1) * gutterVertical;
 
-      for (let c = 1; c < cols; c++) {
-        const x = startX + c * template.widthMm + c * gutterMm - gutterMm / 2;
+      for (let c = 1; c < columns; c++) {
+        const x = marginLeft + c * slotWidthMm + c * gutterHorizontal - gutterHorizontal / 2;
         cutLines.push({
           x1Mm: x,
-          y1Mm: startY,
+          y1Mm: marginTop,
           x2Mm: x,
-          y2Mm: startY + totalGridH,
+          y2Mm: marginTop + totalGridH,
           thicknessMm: 0.2,
           colorHex: '#969696',
           style: 'dashed'
@@ -64,11 +75,11 @@ export const RenderSceneBuilder = {
       }
 
       for (let r = 1; r < rows; r++) {
-        const y = startY + r * template.heightMm + r * gutterMm - gutterMm / 2;
+        const y = marginTop + r * slotHeightMm + r * gutterVertical - gutterVertical / 2;
         cutLines.push({
-          x1Mm: startX,
+          x1Mm: marginLeft,
           y1Mm: y,
-          x2Mm: startX + totalGridW,
+          x2Mm: marginLeft + totalGridW,
           y2Mm: y,
           thicknessMm: 0.2,
           colorHex: '#969696',
@@ -78,17 +89,17 @@ export const RenderSceneBuilder = {
     }
 
     return {
-      paperWidthMm: paperWidth,
-      paperHeightMm: paperHeight,
-      orientation: layout.metadata.orientation,
-      marginMm,
+      paperWidthMm,
+      paperHeightMm,
+      orientation: layout.paperOrientation,
+      marginMm: marginLeft,
       items,
       borders,
       cutLines,
-      safeAreaMm: marginMm,
+      safeAreaMm: marginLeft,
       metadata: {
-        paperId: layout.metadata.paperId,
-        templateId: layout.metadata.templateId,
+        paperId: layout.paperId,
+        templateId: layout.templateId,
         engineVersion: PRINT_ENGINE_VERSION,
         timestamp: Date.now()
       }

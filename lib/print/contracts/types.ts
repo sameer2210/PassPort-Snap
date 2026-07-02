@@ -105,63 +105,69 @@ export interface RenderScene {
   };
 }
 
-export interface GeometryResult {
-  readonly cols: number;
+export interface LayoutSearchConfig {
+  readonly minimumMarginMm: number;
+  readonly minimumGutterMm: number;
+  readonly preferredGutterMm: number;
+  readonly gutterStepMm: number;
+  readonly allowPhotoRotation: boolean;
+  readonly allowPaperRotation: boolean;
+  readonly maxCandidateCount: number;
+  readonly allowZeroGutterWhenNoValidLayout?: boolean;
+  readonly minimumSafeGutterMm?: number;
+}
+
+export interface LayoutOptimizationStats {
+  readonly generatedCandidates: number;
+  readonly validatedCandidates: number;
+  readonly discardedCandidates: number;
+  readonly winningCapacity: number;
+  readonly elapsedTimeMs: number;
+  readonly winningOrientation: 'portrait' | 'landscape';
+  readonly winningPhotoRotation: 'normal' | 'rotated';
+}
+
+export interface LayoutGeometryFields {
   readonly rows: number;
-  readonly capacity: number;
-  readonly paperWidth: number;
-  readonly paperHeight: number;
-  readonly usableWidth: number;
-  readonly usableHeight: number;
-  readonly requiredWidth: number;
-  readonly requiredHeight: number;
-  readonly coordinates: readonly Coordinate[];
-  readonly startX: number;
-  readonly startY: number;
-  readonly remainingWidth: number;
-  readonly remainingHeight: number;
-}
-
-export interface LayoutMetadata {
-  readonly paperId: string;
-  readonly templateId: string;
-  readonly orientation: 'portrait' | 'landscape';
-  readonly marginMm: number;
-  readonly gutterMm: number;
-  readonly algorithmVersion: string;
-  readonly registryVersion: string;
-  readonly cacheVersion: string;
-}
-
-export interface LayoutScore {
-  readonly capacity: number;
-  readonly paperUtilization: number;
-  readonly remainingMargins: number;
-  readonly layoutSymmetry: number;
-  readonly centering: number;
-  readonly orientationPreference: number;
-  readonly overallScore: number;
-}
-
-export interface LayoutResult {
-  readonly geometry: GeometryResult;
-  readonly metadata: LayoutMetadata;
-  readonly score: LayoutScore;
-}
-
-export interface PreviewLayout {
-  readonly paperWidthMm: number;
-  readonly paperHeightMm: number;
+  readonly columns: number;
   readonly slotWidthMm: number;
   readonly slotHeightMm: number;
-  readonly slots: readonly Coordinate[];
-  readonly containerWidthMm: number;
-  readonly containerHeightMm: number;
+  readonly marginLeft: number;
+  readonly marginRight: number;
+  readonly marginTop: number;
+  readonly marginBottom: number;
+  readonly capacity: number;
+  readonly utilization: number;
 }
 
-export interface SinglePhotoLayout {
-  readonly mode: 'single';
-  readonly photoWidthMm: number;
-  readonly photoHeightMm: number;
-  readonly downloadFormats: readonly ExportType[];
+export interface LayoutResult extends LayoutGeometryFields {
+  // Flattened geometry contract (single source of truth)
+  readonly paperId: string;
+  readonly templateId: string;
+  readonly paperOrientation: 'portrait' | 'landscape';
+  readonly gutterHorizontal: number;
+  readonly gutterVertical: number;
+  readonly photoOrientation: 'normal' | 'rotated';
+  readonly photoRotation: number;
+  readonly rotationRequired: boolean;
+  readonly coordinates: readonly Coordinate[];
+  readonly paperWidthMm: number;
+  readonly paperHeightMm: number;
 }
+
+export type LayoutEngineResult = LayoutSuccess | LayoutFailure;
+
+export interface LayoutSuccess {
+  readonly success: true;
+  readonly layout: LayoutResult;
+  readonly stats?: LayoutOptimizationStats;
+}
+
+export interface LayoutFailure {
+  readonly success: false;
+  readonly reason: 'NO_PRINTABLE_AREA' | 'INVALID_PAPER' | 'INVALID_TEMPLATE' | 'NO_CANDIDATE_FITS' | 'INVALID_REGISTRY';
+  readonly message: string;
+  readonly recoverable: boolean;
+}
+
+

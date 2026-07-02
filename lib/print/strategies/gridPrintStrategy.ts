@@ -1,7 +1,6 @@
 import { PrintStrategy } from './printStrategy';
 import { RenderScene, ExportType } from '../contracts/types';
 import { jsPDF } from 'jspdf';
-import { getPreviewLayout } from '../renderers/previewRenderer';
 import { PdfRenderer } from '../renderers/pdfRenderer';
 import { CanvasRenderer } from '../renderers/canvasRenderer';
 
@@ -9,7 +8,7 @@ export class GridPrintStrategy implements PrintStrategy {
   readonly supportedFormats: readonly ExportType[] = [ExportType.PDF, ExportType.PRINT] as const;
 
   generatePreview(scene: RenderScene): unknown {
-    return getPreviewLayout(scene);
+    return scene;
   }
 
   generatePdf(scene: RenderScene): jsPDF {

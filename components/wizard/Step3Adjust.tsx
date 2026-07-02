@@ -6,6 +6,7 @@ import { useAppStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { templates } from '@/lib/config';
+import { DpiProfile } from '@/lib/print';
 import { detectFace, initializeFaceDetector } from '@/lib/faceDetection';
 import { getCroppedImg } from '@/lib/cropImage';
 
@@ -19,8 +20,8 @@ export function Step3Adjust() {
         label: 'Custom',
         widthMm: customTemplateMm.widthMm,
         heightMm: customTemplateMm.heightMm,
-        printWidthPx: Math.round((customTemplateMm.widthMm / 25.4) * 300),
-        printHeightPx: Math.round((customTemplateMm.heightMm / 25.4) * 300),
+        printWidthPx: Math.round((customTemplateMm.widthMm / 25.4) * DpiProfile.Print300),
+        printHeightPx: Math.round((customTemplateMm.heightMm / 25.4) * DpiProfile.Print300),
         countries: 'Custom'
       }
     : baseTemplate;

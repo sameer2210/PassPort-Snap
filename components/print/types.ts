@@ -1,5 +1,5 @@
 import type { Person } from '@/lib/types';
-import type { PreviewLayout, LayoutResult, PaperSize, PhotoTemplate } from '@/lib/print';
+import type { RenderScene, LayoutResult, PaperSize, PhotoTemplate } from '@/lib/print';
 
 export interface ToolbarState {
   readonly isSinglePhotoMode: boolean;
@@ -34,7 +34,7 @@ export interface ExportActions {
 
 export interface PreviewState {
   readonly isSinglePhotoMode: boolean;
-  readonly previewLayout: PreviewLayout | null;
+  readonly previewLayout: RenderScene | null;
   readonly layout: LayoutResult | null;
   readonly template: PhotoTemplate;
   readonly slots: readonly (string | null)[];

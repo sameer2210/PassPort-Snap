@@ -1,11 +1,22 @@
-import { PaperSize, PhotoTemplate, LayoutResult, Coordinate } from '../contracts/types';
-import { LAYOUT_ALGORITHM_VERSION, REGISTRY_VERSION, CACHE_VERSION } from '../constants/printConstants';
+import {
+  PaperSize,
+  PhotoTemplate,
+  LayoutResult,
+  Coordinate,
+  LayoutOptimizationStats,
+  LayoutEngineResult,
+  LayoutGeometryFields,
+} from '../contracts/types';
 import { evaluateLayoutScore } from './layoutScore';
 import { LayoutCache } from './layoutCache';
+import { DEFAULT_SEARCH_CONFIG } from '../constants/layoutSearchDefaults';
 
-export type LayoutEngineResult =
-  | { readonly success: true; readonly layout: LayoutResult }
-  | { readonly success: false; readonly reason: 'OVERFLOW'; readonly message: string; readonly recoverable: boolean };
+interface LayoutCandidate extends LayoutGeometryFields {
+  readonly paperOrientation: 'portrait' | 'landscape';
+  readonly photoOrientation: 'normal' | 'rotated';
+  readonly gutterMm: number;
+  readonly score: number;
+}
 
 export function calculateGrid(
   paper: PaperSize,
@@ -13,129 +24,241 @@ export function calculateGrid(
   marginMm: number,
   gutterMm: number
 ): LayoutEngineResult {
-  // Try caching with default portrait first
-  const cacheKey = LayoutCache.generateKey(
-    paper.id,
-    template.id,
-    'portrait',
+  // Validate inputs
+  if (!paper || !paper.physical || !paper.physical.widthMm || !paper.physical.heightMm) {
+    return {
+      success: false,
+      reason: 'INVALID_PAPER',
+      message: 'The requested paper size configuration is invalid or missing.',
+      recoverable: false
+    };
+  }
+
+  if (!template || !template.widthMm || !template.heightMm) {
+    return {
+      success: false,
+      reason: 'INVALID_TEMPLATE',
+      message: 'The requested photo template configuration is invalid or missing.',
+      recoverable: false
+    };
+  }
+
+  // Try caching with default parameters
+  const cacheKey = LayoutCache.generateKey({
+    paperId: paper.id,
+    templateId: template.id,
     marginMm,
     gutterMm,
-    0,
-    'Print300'
-  );
+    searchConfig: DEFAULT_SEARCH_CONFIG
+  });
   
   const cached = LayoutCache.get(cacheKey);
   if (cached) return { success: true, layout: cached };
 
-  const orientations: ('portrait' | 'landscape')[] = ['portrait', 'landscape'];
-  const candidates: LayoutResult[] = [];
+  const startTime = Date.now();
+  let generatedCandidatesCount = 0;
+  let validatedCandidatesCount = 0;
+  let discardedCandidatesCount = 0;
 
-  for (const orient of orientations) {
-    const paperWidth = orient === 'landscape'
-      ? Math.max(paper.physical.widthMm, paper.physical.heightMm)
-      : Math.min(paper.physical.widthMm, paper.physical.heightMm);
-    const paperHeight = orient === 'landscape'
-      ? Math.min(paper.physical.widthMm, paper.physical.heightMm)
-      : Math.max(paper.physical.widthMm, paper.physical.heightMm);
+  const minMargin = marginMm;
+  const preferredGutter = gutterMm;
+  const minSafeGutter = DEFAULT_SEARCH_CONFIG.minimumSafeGutterMm ?? 0.5;
+  const gutterStep = DEFAULT_SEARCH_CONFIG.gutterStepMm;
 
-    const usableWidth = paperWidth - marginMm * 2;
-    const usableHeight = paperHeight - marginMm * 2;
+  const paperOrientations: ('portrait' | 'landscape')[] = DEFAULT_SEARCH_CONFIG.allowPaperRotation
+    ? ['portrait', 'landscape']
+    : ['portrait'];
+  const photoOrientations: ('normal' | 'rotated')[] = DEFAULT_SEARCH_CONFIG.allowPhotoRotation
+    ? ['normal', 'rotated']
+    : ['normal'];
 
-    const maxCols = Math.max(0, Math.floor((usableWidth + gutterMm) / (template.widthMm + gutterMm)));
-    const maxRows = Math.max(0, Math.floor((usableHeight + gutterMm) / (template.heightMm + gutterMm)));
+  const runSearch = (guttersToTest: number[]): LayoutCandidate[] => {
+    const found: LayoutCandidate[] = [];
+    for (const paperOrient of paperOrientations) {
+      const paperWidth = paperOrient === 'landscape'
+        ? Math.max(paper.physical.widthMm, paper.physical.heightMm)
+        : Math.min(paper.physical.widthMm, paper.physical.heightMm);
+      const paperHeight = paperOrient === 'landscape'
+        ? Math.min(paper.physical.widthMm, paper.physical.heightMm)
+        : Math.max(paper.physical.widthMm, paper.physical.heightMm);
 
-    for (let cols = 1; cols <= maxCols; cols++) {
-      for (let rows = 1; rows <= maxRows; rows++) {
-        const requiredWidth = cols * template.widthMm + (cols - 1) * gutterMm;
-        const requiredHeight = rows * template.heightMm + (rows - 1) * gutterMm;
+      const printableArea = {
+        x: minMargin,
+        y: minMargin,
+        width: paperWidth - minMargin * 2,
+        height: paperHeight - minMargin * 2
+      };
 
-        if (requiredWidth <= usableWidth && requiredHeight <= usableHeight) {
-          const remainingWidth = usableWidth - requiredWidth;
-          const remainingHeight = usableHeight - requiredHeight;
+      for (const photoOrient of photoOrientations) {
+        const photoWidth = photoOrient === 'rotated' ? template.heightMm : template.widthMm;
+        const photoHeight = photoOrient === 'rotated' ? template.widthMm : template.heightMm;
+
+        for (const gutter of guttersToTest) {
+          generatedCandidatesCount++;
+
+          const cols = Math.max(0, Math.floor((printableArea.width + gutter) / (photoWidth + gutter)));
+          const rows = Math.max(0, Math.floor((printableArea.height + gutter) / (photoHeight + gutter)));
           const capacity = cols * rows;
 
+          const usedW = cols * photoWidth + (cols - 1) * gutter;
+          const usedH = rows * photoHeight + (rows - 1) * gutter;
+
+          const remW = paperWidth - usedW;
+          const remH = paperHeight - usedH;
+
+          const marginLeft = remW / 2;
+          const marginRight = remW / 2;
+          const marginTop = remH / 2;
+          const marginBottom = remH / 2;
+
           const paperArea = paperWidth * paperHeight;
-          const photoArea = capacity * template.widthMm * template.heightMm;
-          const wastedPaperPercent = ((paperArea - photoArea) / paperArea) * 100;
+          const photoArea = capacity * photoWidth * photoHeight;
+          const utilization = paperArea > 0 ? (photoArea / paperArea) * 100 : 0;
 
-          const startX = marginMm + (remainingWidth / 2);
-          const startY = marginMm + (remainingHeight / 2);
+          // Validation constraint check BEFORE scoring
+          const isValid =
+            cols > 0 &&
+            rows > 0 &&
+            marginLeft >= minMargin - 0.0001 &&
+            marginRight >= minMargin - 0.0001 &&
+            marginTop >= minMargin - 0.0001 &&
+            marginBottom >= minMargin - 0.0001 &&
+            usedW <= paperWidth &&
+            usedH <= paperHeight &&
+            !isNaN(marginLeft) && !isNaN(marginRight) && !isNaN(marginTop) && !isNaN(marginBottom) &&
+            isFinite(marginLeft) && isFinite(marginRight) && isFinite(marginTop) && isFinite(marginBottom) &&
+            usedW > 0 && usedH > 0;
 
-          const coordinates: Coordinate[] = [];
-          for (let r = 0; r < rows; r++) {
-            for (let c = 0; c < cols; c++) {
-              coordinates.push({
-                x: startX + c * (template.widthMm + gutterMm),
-                y: startY + r * (template.heightMm + gutterMm)
-              });
-            }
+          if (!isValid) {
+            discardedCandidatesCount++;
+            continue;
           }
+          validatedCandidatesCount++;
 
-          const scoreValue = evaluateLayoutScore(
+          const score = evaluateLayoutScore({
             capacity,
-            wastedPaperPercent,
-            remainingWidth,
-            remainingHeight,
-            orient,
-            'portrait'
-          );
+            marginLeft,
+            marginRight,
+            marginTop,
+            marginBottom,
+            utilization,
+            gutter,
+            preferredGutter,
+            minimumSafeGutter: minSafeGutter
+          });
 
-          candidates.push({
-            geometry: {
-              cols,
-              rows,
-              capacity,
-              paperWidth,
-              paperHeight,
-              usableWidth,
-              usableHeight,
-              requiredWidth,
-              requiredHeight,
-              coordinates,
-              startX,
-              startY,
-              remainingWidth,
-              remainingHeight
-            },
-            metadata: {
-              paperId: paper.id,
-              templateId: template.id,
-              orientation: orient,
-              marginMm,
-              gutterMm,
-              algorithmVersion: LAYOUT_ALGORITHM_VERSION,
-              registryVersion: REGISTRY_VERSION,
-              cacheVersion: CACHE_VERSION
-            },
-            score: {
-              capacity,
-              paperUtilization: 100 - wastedPaperPercent,
-              remainingMargins: remainingWidth + remainingHeight,
-              layoutSymmetry: 100 - Math.abs(remainingWidth - remainingHeight),
-              centering: 100 - (Math.abs(remainingWidth) + Math.abs(remainingHeight)),
-              orientationPreference: orient === 'portrait' ? 1 : 0,
-              overallScore: scoreValue
-            }
+          found.push({
+            paperOrientation: paperOrient,
+            photoOrientation: photoOrient,
+            rows,
+            columns: cols,
+            slotWidthMm: photoWidth,
+            slotHeightMm: photoHeight,
+            gutterMm: gutter,
+            marginLeft,
+            marginRight,
+            marginTop,
+            marginBottom,
+            capacity,
+            utilization,
+            score
           });
         }
       }
     }
+    return found;
+  };
+
+  // Build list of unique safe gutters to evaluate
+  const safeGutterOptions: number[] = [];
+  for (let g = preferredGutter; g >= minSafeGutter - 0.0001; g -= gutterStep) {
+    safeGutterOptions.push(Math.max(minSafeGutter, g));
+    if (g <= minSafeGutter) break;
+  }
+  const uniqueSafeGutters = Array.from(new Set(safeGutterOptions));
+
+  // Step 1: Run Search on Safe Gutters
+  let candidates = runSearch(uniqueSafeGutters);
+
+  // Step 2: If no valid candidates found in safe range, fallback to 0 mm gutter (if allowed)
+  if (candidates.length === 0 && DEFAULT_SEARCH_CONFIG.allowZeroGutterWhenNoValidLayout) {
+    candidates = runSearch([DEFAULT_SEARCH_CONFIG.minimumGutterMm]);
   }
 
-  if (candidates.length === 0) {
+  // Stage 5: Sort Candidates
+  candidates.sort((a, b) => b.score - a.score);
+
+  // Stage 6: Select Winner
+  const winner = candidates[0];
+
+  if (!winner) {
     return {
       success: false,
-      reason: 'OVERFLOW',
+      reason: 'NO_CANDIDATE_FITS',
       message: `The photo template size (${template.widthMm}x${template.heightMm}mm) cannot fit within the printable bounds of paper ${paper.label}.`,
       recoverable: true
     };
   }
 
-  candidates.sort((a, b) => b.score.overallScore - a.score.overallScore);
-  const bestLayout = candidates[0];
+  // Stage 7: Convert Winner to LayoutResult
+  const startX = winner.marginLeft;
+  const startY = winner.marginTop;
+  const coordinates: Coordinate[] = [];
+  for (let r = 0; r < winner.rows; r++) {
+    for (let c = 0; c < winner.columns; c++) {
+      coordinates.push({
+        x: startX + c * (winner.slotWidthMm + winner.gutterMm),
+        y: startY + r * (winner.slotHeightMm + winner.gutterMm)
+      });
+    }
+  }
 
-  // Cache the result
-  LayoutCache.set(cacheKey, bestLayout);
+  const paperWidth = winner.paperOrientation === 'landscape'
+    ? Math.max(paper.physical.widthMm, paper.physical.heightMm)
+    : Math.min(paper.physical.widthMm, paper.physical.heightMm);
+  const paperHeight = winner.paperOrientation === 'landscape'
+    ? Math.min(paper.physical.widthMm, paper.physical.heightMm)
+    : Math.max(paper.physical.widthMm, paper.physical.heightMm);
 
-  return { success: true, layout: bestLayout };
+  const winningPhotoRotation = winner.photoOrientation === 'rotated' ? 90 : 0;
+
+  const layoutResult: LayoutResult = {
+    paperId: paper.id,
+    templateId: template.id,
+    paperOrientation: winner.paperOrientation,
+    rows: winner.rows,
+    columns: winner.columns,
+    slotWidthMm: winner.slotWidthMm,
+    slotHeightMm: winner.slotHeightMm,
+    marginLeft: winner.marginLeft,
+    marginRight: winner.marginRight,
+    marginTop: winner.marginTop,
+    marginBottom: winner.marginBottom,
+    gutterHorizontal: winner.gutterMm,
+    gutterVertical: winner.gutterMm,
+    capacity: winner.capacity,
+    photoOrientation: winner.photoOrientation,
+    photoRotation: winningPhotoRotation,
+    rotationRequired: winner.photoOrientation === 'rotated',
+    coordinates,
+    paperWidthMm: paperWidth,
+    paperHeightMm: paperHeight,
+    utilization: winner.utilization,
+  };
+
+  const elapsedTimeMs = Date.now() - startTime;
+  const stats: LayoutOptimizationStats = {
+    generatedCandidates: generatedCandidatesCount,
+    validatedCandidates: validatedCandidatesCount,
+    discardedCandidates: discardedCandidatesCount,
+    winningCapacity: winner.capacity,
+    elapsedTimeMs,
+    winningOrientation: winner.paperOrientation,
+    winningPhotoRotation: winner.photoOrientation
+  };
+
+  // Cache the layoutResult
+  LayoutCache.set(cacheKey, layoutResult);
+
+  return { success: true, layout: layoutResult, stats };
 }

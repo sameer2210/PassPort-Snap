@@ -3,10 +3,9 @@ import {
   PaperSize,
   PhotoTemplate,
   LayoutResult,
-  PreviewLayout,
+  RenderScene,
   PrintController,
   RenderSceneBuilder,
-  getPreviewLayout,
   UnitConverter,
   DpiProfile,
 } from '@/lib/print';
@@ -31,7 +30,7 @@ export interface UsePrintPreviewInput {
 }
 
 export interface UsePrintPreviewOutput {
-  readonly previewScene: PreviewLayout | null;
+  readonly previewScene: RenderScene | null;
   readonly previewScale: number;
   readonly previewDimensions: PreviewDimensions;
 }
@@ -51,34 +50,31 @@ export function usePrintPreview({
   const layout = layoutResult.success ? layoutResult.layout : null;
 
   // Preview scene generation (Large preview scene generation - memoized)
-  const previewLayout = useMemo(() => {
+  const previewScene = useMemo(() => {
     if (!layout || !layoutResult.success) return null;
 
-    const mockSlots = Array(layout.geometry.capacity).fill(null);
-    const mockScene = RenderSceneBuilder.build({
+    const mockSlots = Array(layout.capacity).fill(null);
+    return RenderSceneBuilder.build({
       layout,
-      template,
       slots: mockSlots,
       images: {},
       addBorder,
       showCutlines,
     });
+  }, [layout, layoutResult.success, addBorder, showCutlines]);
 
-    return getPreviewLayout(mockScene);
-  }, [layout, layoutResult.success, template, addBorder, showCutlines]);
-
-  const capacity = layout ? layout.geometry.capacity : 0;
+  const capacity = layout ? layout.capacity : 0;
 
   // Visual scaling factors for millimeter preview layout inside HTML
-  const paperWidthPx = previewLayout
-    ? UnitConverter.convert(previewLayout.paperWidthMm, 'mm', 'px', DpiProfile.Preview)
+  const paperWidthPx = previewScene
+    ? UnitConverter.convert(previewScene.paperWidthMm, 'mm', 'px', DpiProfile.Preview)
     : 0;
-  const paperHeightPx = previewLayout
-    ? UnitConverter.convert(previewLayout.paperHeightMm, 'mm', 'px', DpiProfile.Preview)
+  const paperHeightPx = previewScene
+    ? UnitConverter.convert(previewScene.paperHeightMm, 'mm', 'px', DpiProfile.Preview)
     : 0;
 
   return {
-    previewScene: previewLayout,
+    previewScene,
     previewScale: 2.5,
     previewDimensions: {
       paperWidthPx,

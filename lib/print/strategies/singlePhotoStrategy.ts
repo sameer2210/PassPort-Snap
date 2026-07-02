@@ -7,15 +7,7 @@ export class SinglePhotoStrategy implements PrintStrategy {
   readonly supportedFormats: readonly ExportType[] = [ExportType.JPEG, ExportType.PNG] as const;
 
   generatePreview(scene: RenderScene): unknown {
-    return {
-      paperWidthMm: scene.paperWidthMm,
-      paperHeightMm: scene.paperHeightMm,
-      slotWidthMm: scene.paperWidthMm,
-      slotHeightMm: scene.paperHeightMm,
-      slots: [{ x: 0, y: 0 }],
-      containerWidthMm: scene.paperWidthMm,
-      containerHeightMm: scene.paperHeightMm
-    };
+    return scene;
   }
 
   generatePdf(_scene: RenderScene): jsPDF {

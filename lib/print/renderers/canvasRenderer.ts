@@ -32,14 +32,31 @@ export const CanvasRenderer = {
         const y = UnitConverter.convert(item.yMm, 'mm', 'px', dpi);
         const w = UnitConverter.convert(item.widthMm, 'mm', 'px', dpi);
         const h = UnitConverter.convert(item.heightMm, 'mm', 'px', dpi);
-        ctx.drawImage(img, x, y, w, h);
+        
+        ctx.save();
+        // Create clipping mask to safeguard slot boundary containment
+        ctx.beginPath();
+        ctx.rect(x, y, w, h);
+        ctx.clip();
+
+        const rotation = item.rotationDegrees || 0;
+        if (rotation !== 0) {
+          // Translate to the center of the slot, rotate, then draw image centered.
+          // Transpose draw width and height to preserve the aspect ratio of the rotated image.
+          ctx.translate(x + w / 2, y + h / 2);
+          ctx.rotate((rotation * Math.PI) / 180);
+          ctx.drawImage(img, -h / 2, -w / 2, h, w);
+        } else {
+          ctx.drawImage(img, x, y, w, h);
+        }
+        ctx.restore();
       }
     }
 
     // 2. Draw Borders
-    ctx.strokeStyle = '#000000';
-    ctx.lineWidth = Math.max(1, UnitConverter.convert(0.2, 'mm', 'px', dpi));
     for (const border of scene.borders) {
+      ctx.strokeStyle = border.colorHex;
+      ctx.lineWidth = Math.max(1, UnitConverter.convert(border.thicknessMm, 'mm', 'px', dpi));
       const x = UnitConverter.convert(border.xMm, 'mm', 'px', dpi);
       const y = UnitConverter.convert(border.yMm, 'mm', 'px', dpi);
       const w = UnitConverter.convert(border.widthMm, 'mm', 'px', dpi);
@@ -49,13 +66,12 @@ export const CanvasRenderer = {
 
     // 3. Draw Cut Lines
     if (scene.cutLines.length > 0) {
-      ctx.strokeStyle = '#969696';
-      ctx.lineWidth = Math.max(1, UnitConverter.convert(0.2, 'mm', 'px', dpi));
-      
       const dashLen = UnitConverter.convert(1, 'mm', 'px', dpi);
       ctx.setLineDash([dashLen, dashLen]);
 
       for (const line of scene.cutLines) {
+        ctx.strokeStyle = line.colorHex;
+        ctx.lineWidth = Math.max(1, UnitConverter.convert(line.thicknessMm, 'mm', 'px', dpi));
         const x1 = UnitConverter.convert(line.x1Mm, 'mm', 'px', dpi);
         const y1 = UnitConverter.convert(line.y1Mm, 'mm', 'px', dpi);
         const x2 = UnitConverter.convert(line.x2Mm, 'mm', 'px', dpi);

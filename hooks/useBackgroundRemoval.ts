@@ -4,6 +4,7 @@ import { rmbgEngine } from '@/lib/background/backgroundService';
 import { backgroundCache } from '@/lib/background/backgroundCache';
 import { compositeColorBase64, compositeColorBlobUrl } from '@/lib/background/backgroundCanvas';
 import { templates } from '@/lib/config';
+import { DpiProfile } from '@/lib/print';
 import { getCroppedImg } from '@/lib/cropImage';
 
 export function useBackgroundRemoval() {
@@ -91,10 +92,10 @@ export function useBackgroundRemoval() {
       // Create composite canvas and output base64
       const baseTemplate = templates.find(t => t.id === storeState.templateId) || templates[0];
       const targetW = storeState.templateId === 'custom'
-        ? Math.round((storeState.customTemplateMm.widthMm / 25.4) * 300)
+        ? Math.round((storeState.customTemplateMm.widthMm / 25.4) * DpiProfile.Print300)
         : baseTemplate.printWidthPx;
       const targetH = storeState.templateId === 'custom'
-        ? Math.round((storeState.customTemplateMm.heightMm / 25.4) * 300)
+        ? Math.round((storeState.customTemplateMm.heightMm / 25.4) * DpiProfile.Print300)
         : baseTemplate.printHeightPx;
 
       const finalBase64 = await compositeColorBase64(cachedItem.previewBlob, color, targetW, targetH);
@@ -142,10 +143,10 @@ export function useBackgroundRemoval() {
 
     const baseTemplate = templates.find(t => t.id === storeState.templateId) || templates[0];
     const targetW = storeState.templateId === 'custom'
-      ? Math.round((storeState.customTemplateMm.widthMm / 25.4) * 300)
+      ? Math.round((storeState.customTemplateMm.widthMm / 25.4) * DpiProfile.Print300)
       : baseTemplate.printWidthPx;
     const targetH = storeState.templateId === 'custom'
-      ? Math.round((storeState.customTemplateMm.heightMm / 25.4) * 300)
+      ? Math.round((storeState.customTemplateMm.heightMm / 25.4) * DpiProfile.Print300)
       : baseTemplate.printHeightPx;
 
     // 1. Original choice -> skip background removal, crop only

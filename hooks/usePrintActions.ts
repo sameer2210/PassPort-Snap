@@ -133,7 +133,7 @@ export function usePrintActions({
 
   const handlePrint = useCallback(() => {
     if (layout) {
-      BrowserPrintService.print(layout.geometry.paperWidth, layout.geometry.paperHeight);
+      BrowserPrintService.print(layout.paperWidthMm, layout.paperHeightMm);
     }
   }, [layout]);
 

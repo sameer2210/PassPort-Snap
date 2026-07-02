@@ -24,10 +24,6 @@ export const PRINT_PROFILES: Record<PrintProfile, ProfileSettings> = {
 };
 
 export const PRINT_CONSTANTS = {
-  DEFAULT_MARGIN_MM: 4,
-  DEFAULT_GUTTER_MM: 2,
-  MAX_GUTTER_MM: 5,
-  MIN_GUTTER_MM: 0,
   MM_TO_INCH: 25.4,
   PT_TO_INCH: 72
 } as const;

@@ -13,12 +13,10 @@ export const PrintPreviewCanvas: React.FC<PrintPreviewCanvasProps> = React.memo(
   const {
     isSinglePhotoMode,
     previewLayout,
-    layout,
     template,
     slots,
     people,
     selectedPersonId,
-    addBorder,
     showCutlines,
     paperWidthPx,
     paperHeightPx,
@@ -39,7 +37,7 @@ export const PrintPreviewCanvas: React.FC<PrintPreviewCanvasProps> = React.memo(
             }}
           >
             {/* Print grid coordinates rendering */}
-            {previewLayout.slots.map((slot, i) => {
+            {previewLayout.items.map((item, i) => {
               const personId = slots[i];
               const person = people.find((p) => p.id === personId);
 
@@ -47,89 +45,66 @@ export const PrintPreviewCanvas: React.FC<PrintPreviewCanvasProps> = React.memo(
                 <PrintPreviewSlot
                   key={i}
                   index={i}
-                  slot={slot}
+                  slot={{ x: item.xMm, y: item.yMm }}
                   personId={personId}
                   person={person}
-                  slotWidthMm={previewLayout.slotWidthMm}
-                  slotHeightMm={previewLayout.slotHeightMm}
-                  addBorder={addBorder}
+                  slotWidthMm={item.widthMm}
+                  slotHeightMm={item.heightMm}
                   onSlotClick={onSlotClick}
                 />
               );
             })}
 
+            {/* Print grid borders rendering */}
+            {previewLayout.borders.map((border, idx) => {
+              const bx = UnitConverter.convert(border.xMm, 'mm', 'px', DpiProfile.Preview);
+              const by = UnitConverter.convert(border.yMm, 'mm', 'px', DpiProfile.Preview);
+              const bw = UnitConverter.convert(border.widthMm, 'mm', 'px', DpiProfile.Preview);
+              const bh = UnitConverter.convert(border.heightMm, 'mm', 'px', DpiProfile.Preview);
+              return (
+                <div
+                  key={`b-${idx}`}
+                  className="absolute pointer-events-none"
+                  style={{
+                    left: `${bx}px`,
+                    top: `${by}px`,
+                    width: `${bw}px`,
+                    height: `${bh}px`,
+                    border: `${border.thicknessMm}mm solid ${border.colorHex}`,
+                    boxSizing: 'border-box',
+                  }}
+                />
+              );
+            })}
+
             {/* Dashed alignment cutlines */}
-            {layout && showCutlines && previewLayout.slots.length > 0 && (
-              <div className="absolute inset-0 pointer-events-none">
-                {/* Vertical Lines */}
-                {Array.from({ length: Math.max(0, layout.geometry.cols - 1) }).map((_, c) => {
-                  const colIndex = c + 1;
-                  const xMm =
-                    layout.geometry.startX +
-                    colIndex * template.widthMm +
-                    colIndex * layout.metadata.gutterMm -
-                    layout.metadata.gutterMm / 2;
-                  const x = UnitConverter.convert(xMm, 'mm', 'px', DpiProfile.Preview);
-                  const totalHMm =
-                    layout.geometry.rows * template.heightMm +
-                    (layout.geometry.rows - 1) * layout.metadata.gutterMm;
-                  const totalH = UnitConverter.convert(totalHMm, 'mm', 'px', DpiProfile.Preview);
-                  const startY = UnitConverter.convert(
-                    layout.geometry.startY,
-                    'mm',
-                    'px',
-                    DpiProfile.Preview
-                  );
+            {showCutlines && previewLayout.cutLines.map((line, idx) => {
+              const x1 = UnitConverter.convert(line.x1Mm, 'mm', 'px', DpiProfile.Preview);
+              const y1 = UnitConverter.convert(line.y1Mm, 'mm', 'px', DpiProfile.Preview);
+              const x2 = UnitConverter.convert(line.x2Mm, 'mm', 'px', DpiProfile.Preview);
+              const y2 = UnitConverter.convert(line.y2Mm, 'mm', 'px', DpiProfile.Preview);
 
-                  return (
-                    <div
-                      key={`v-${c}`}
-                      className="absolute border-l border-dashed border-gray-400"
-                      style={{
-                        left: `${x}px`,
-                        top: `${startY}px`,
-                        height: `${totalH}px`,
-                        borderWidth: '0.5px',
-                      }}
-                    />
-                  );
-                })}
+              const isVertical = Math.abs(x1 - x2) < 0.1;
+              const left = Math.min(x1, x2);
+              const top = Math.min(y1, y2);
+              const width = isVertical ? 0 : Math.abs(x2 - x1);
+              const height = isVertical ? Math.abs(y2 - y1) : 0;
 
-                {/* Horizontal Lines */}
-                {Array.from({ length: Math.max(0, layout.geometry.rows - 1) }).map((_, r) => {
-                  const rowIndex = r + 1;
-                  const yMm =
-                    layout.geometry.startY +
-                    rowIndex * template.heightMm +
-                    rowIndex * layout.metadata.gutterMm -
-                    layout.metadata.gutterMm / 2;
-                  const y = UnitConverter.convert(yMm, 'mm', 'px', DpiProfile.Preview);
-                  const totalWMm =
-                    layout.geometry.cols * template.widthMm +
-                    (layout.geometry.cols - 1) * layout.metadata.gutterMm;
-                  const totalW = UnitConverter.convert(totalWMm, 'mm', 'px', DpiProfile.Preview);
-                  const startX = UnitConverter.convert(
-                    layout.geometry.startX,
-                    'mm',
-                    'px',
-                    DpiProfile.Preview
-                  );
-
-                  return (
-                    <div
-                      key={`h-${r}`}
-                      className="absolute border-t border-dashed border-gray-400"
-                      style={{
-                        top: `${y}px`,
-                        left: `${startX}px`,
-                        width: `${totalW}px`,
-                        borderWidth: '0.5px',
-                      }}
-                    />
-                  );
-                })}
-              </div>
-            )}
+              return (
+                <div
+                  key={`c-${idx}`}
+                  className="absolute pointer-events-none"
+                  style={{
+                    left: `${left}px`,
+                    top: `${top}px`,
+                    width: isVertical ? '0px' : `${width}px`,
+                    height: isVertical ? `${height}px` : '0px',
+                    borderLeft: isVertical ? '0.5px dashed #969696' : 'none',
+                    borderTop: !isVertical ? '0.5px dashed #969696' : 'none',
+                  }}
+                />
+              );
+            })}
           </div>
         )
       ) : (

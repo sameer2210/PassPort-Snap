@@ -14,7 +14,6 @@ export * from './core/renderSceneBuilder';
 
 export * from './validation/validators';
 
-export * from './renderers/previewRenderer';
 export * from './renderers/pdfRenderer';
 export * from './renderers/canvasRenderer';
 

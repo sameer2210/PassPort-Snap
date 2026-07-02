@@ -1,25 +1,51 @@
+export interface ScoringInput {
+  readonly capacity: number;
+  readonly marginLeft: number;
+  readonly marginRight: number;
+  readonly marginTop: number;
+  readonly marginBottom: number;
+  readonly utilization: number;
+  readonly gutter: number;
+  readonly preferredGutter: number;
+  readonly minimumSafeGutter: number;
+}
 
-export const LAYOUT_SCORE_WEIGHTS = {
-  capacity: 10000,
-  paperUtilization: 100,
-  centering: 10,
-  symmetry: 5,
-  orientationPreference: 1
-} as const;
+export function evaluateLayoutScore(input: ScoringInput): number {
+  const {
+    capacity,
+    marginLeft,
+    marginRight,
+    marginTop,
+    marginBottom,
+    utilization,
+    gutter,
+    preferredGutter,
+    minimumSafeGutter,
+  } = input;
 
-export function evaluateLayoutScore(
-  capacity: number,
-  wastedPaperPercent: number,
-  remainingW: number,
-  remainingH: number,
-  orientation: 'portrait' | 'landscape',
-  defaultOrientation: 'portrait' | 'landscape'
-): number {
-  const capScore = capacity * LAYOUT_SCORE_WEIGHTS.capacity;
-  const utilScore = (100 - wastedPaperPercent) * LAYOUT_SCORE_WEIGHTS.paperUtilization;
-  const centeringScore = (100 - (Math.abs(remainingW) + Math.abs(remainingH))) * LAYOUT_SCORE_WEIGHTS.centering;
-  const symmetryScore = (100 - Math.abs(remainingW - remainingH)) * LAYOUT_SCORE_WEIGHTS.symmetry;
-  const orientScore = (orientation === defaultOrientation ? 1 : 0) * LAYOUT_SCORE_WEIGHTS.orientationPreference;
+  // 1. Capacity (Primary Priority - capacity must always win)
+  const capScore = capacity * 1000000;
 
-  return capScore + utilScore + centeringScore + symmetryScore + orientScore;
+  // 2. Gutter Preservation (Secondary Priority - normalized gutter retention ratio)
+  let gutterRetentionRatio = 1.0;
+  if (preferredGutter > minimumSafeGutter) {
+    gutterRetentionRatio = (gutter - minimumSafeGutter) / (preferredGutter - minimumSafeGutter);
+    gutterRetentionRatio = Math.max(0, Math.min(1, gutterRetentionRatio));
+  } else {
+    gutterRetentionRatio = gutter >= preferredGutter ? 1.0 : 0.0;
+  }
+  const gutterScore = gutterRetentionRatio * 10000;
+
+  // 3. Printable Area Utilization (Tertiary Priority)
+  const utilScore = utilization * 100;
+
+  // 4. Grid Symmetry (Centering balance)
+  const horizDiff = Math.abs(marginLeft - marginRight);
+  const vertDiff = Math.abs(marginTop - marginBottom);
+  const symmetry = Math.max(0, 100 - (horizDiff + vertDiff));
+  const symmetryScore = symmetry * 10;
+
+  // Note: Margins are treated strictly as constraints validated in LayoutEngine,
+  // not as rewards in layoutScore, to prevent preferring large empty borders.
+  return capScore + gutterScore + utilScore + symmetryScore;
 }
