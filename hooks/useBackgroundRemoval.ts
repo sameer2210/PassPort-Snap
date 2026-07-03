@@ -1,11 +1,12 @@
-import { useRef, useCallback } from 'react';
-import { useAppStore } from '@/lib/store';
-import { rmbgEngine } from '@/lib/background/backgroundService';
+import { IMAGE_ADJUSTMENT_DEFAULTS } from '@/hooks/imageAdjustmentDefaults';
 import { backgroundCache } from '@/lib/background/backgroundCache';
 import { compositeColorBase64, compositeColorBlobUrl } from '@/lib/background/backgroundCanvas';
+import { rmbgEngine } from '@/lib/background/backgroundService';
 import { templates } from '@/lib/config';
-import { DpiProfile } from '@/lib/print';
 import { getCroppedImg } from '@/lib/cropImage';
+import { DpiProfile } from '@/lib/print';
+import { useAppStore } from '@/lib/store';
+import { useCallback, useRef } from 'react';
 
 export function useBackgroundRemoval() {
   const activeRequestId = useRef<number>(0);
@@ -46,12 +47,12 @@ export function useBackgroundRemoval() {
       if (!storeState.modelLoaded) {
         if (requestId !== activeRequestId.current) return;
         storeState.setBackgroundStatus('checking-model');
-        
+
         await rmbgEngine.ensureModel(() => {
           if (requestId !== activeRequestId.current) return;
           storeState.setBackgroundStatus('downloading-model');
         });
-        
+
         if (requestId !== activeRequestId.current) return;
         storeState.setBackgroundStatus('initializing-model');
         await rmbgEngine.initialize();
@@ -68,14 +69,14 @@ export function useBackgroundRemoval() {
         // Fetch base64 croppedPhotoUrl as blob
         const res = await fetch(croppedPhotoUrl);
         const imageBlob = await res.blob();
-        
+
         if (requestId !== activeRequestId.current) return;
-        
+
         // Execute background removal
         transparentBlob = await rmbgEngine.remove(imageBlob);
-        
+
         if (requestId !== activeRequestId.current) return;
-        
+
         // Write to Cache
         backgroundCache.setPreview(personId, transparentBlob);
       }
@@ -85,7 +86,7 @@ export function useBackgroundRemoval() {
 
       // 5. Compositing
       const color = colorOption === 'white' ? '#ffffff' : colorOption === 'blue' ? '#e0f2fe' : customColorHex;
-      
+
       const cachedItem = backgroundCache.get(personId);
       if (!cachedItem?.previewBlob) throw new Error('Preview cache entry missing');
 
@@ -99,9 +100,9 @@ export function useBackgroundRemoval() {
         : baseTemplate.printHeightPx;
 
       const finalBase64 = await compositeColorBase64(cachedItem.previewBlob, color, targetW, targetH);
-      
+
       if (requestId !== activeRequestId.current) return;
-      
+
       // Update state
       storeState.updatePerson(personId, { backgroundPreviewUrl: finalBase64 });
       storeState.setBackgroundStatus('completed');
@@ -132,8 +133,9 @@ export function useBackgroundRemoval() {
     const croppedPhotoUrl = person.croppedPhotoUrl || person.previewPhotoUrl || '';
     const cropConfig = person.croppedAreaPixels || { x: 0, y: 0, width: 100, height: 100 };
     const rotation = person.rotation ?? 0;
-    const brightness = person.brightness ?? 100;
-    const contrast = person.contrast ?? 100;
+    const brightness = person.brightness ?? IMAGE_ADJUSTMENT_DEFAULTS.brightness;
+    const contrast = person.contrast ?? IMAGE_ADJUSTMENT_DEFAULTS.contrast;
+    const sharpness = person.sharpness ?? IMAGE_ADJUSTMENT_DEFAULTS.sharpness;
 
     const requestId = ++activeRequestId.current;
     storeState.setBackgroundError(null);
@@ -162,11 +164,12 @@ export function useBackgroundRemoval() {
           brightness,
           contrast,
           targetW,
-          targetH
+          targetH,
+          sharpness
         );
         if (requestId !== activeRequestId.current) return false;
-        
-        storeState.updatePerson(personId, { 
+
+        storeState.updatePerson(personId, {
           highResFinalUrl: finalUrl,
           finalPhotoUrl: croppedPhotoUrl // Persisted base64 crop fallback
         });
@@ -196,7 +199,7 @@ export function useBackgroundRemoval() {
 
       if (!transparentHighResBlob) {
         storeState.setBackgroundStatus('processing-highres');
-        
+
         // First perform cropping, rotation, adjustments on source
         const cropSource = highResPhotoUrl || croppedPhotoUrl;
         const cropOutputUrl = await getCroppedImg(
@@ -207,7 +210,8 @@ export function useBackgroundRemoval() {
           brightness,
           contrast,
           targetW,
-          targetH
+          targetH,
+          sharpness
         );
 
         if (!cropOutputUrl) throw new Error('Crop output returned empty');
@@ -255,7 +259,7 @@ export function useBackgroundRemoval() {
       if (requestId !== activeRequestId.current) return false;
 
       // 6. Update Zustand store
-      storeState.updatePerson(personId, { 
+      storeState.updatePerson(personId, {
         highResFinalUrl: finalHighResUrl,
         finalPhotoUrl: finalPhotoUrl
       });

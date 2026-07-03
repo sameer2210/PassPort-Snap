@@ -1,6 +1,9 @@
 /* eslint-disable @next/next/no-img-element */
 import React from 'react';
 import type { Person } from '@/lib/types';
+import { SectionCard } from '@/components/ui/SectionCard';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { Image as ImageIcon, Camera } from 'lucide-react';
 
 export interface PrintPhotoSelectorProps {
   readonly people: readonly Person[];
@@ -18,43 +21,61 @@ export const PrintPhotoSelector: React.FC<PrintPhotoSelectorProps> = React.memo(
   onSelectPerson,
 }) => {
   return (
-    <div className="border rounded-lg p-4 space-y-3 bg-white shadow-sm">
-      <h3 className="font-semibold text-sm text-gray-700">Select Photo</h3>
-      <div className="max-h-48 overflow-y-auto space-y-2 pr-2">
-        {people.map((p, idx) => (
-          <div
-            key={p.id}
-            className={`flex items-center justify-between p-2 rounded-lg cursor-pointer border-2 transition-all ${
-              selectedPersonId === p.id
-                ? 'border-blue-600 bg-blue-50'
-                : 'border-transparent hover:bg-gray-50'
-            }`}
-            onClick={() => onSelectPerson(p.id)}
-          >
-            <div className="flex items-center gap-3">
-              {p.finalPhotoUrl && (
-                <img
-                  src={p.finalPhotoUrl}
-                  className="w-10 h-10 object-cover rounded shadow-sm"
-                  alt={`Person ${idx + 1}`}
-                />
-              )}
-              <span className="font-medium text-sm">Photo {idx + 1}</span>
-            </div>
-            {!isSinglePhotoMode && (
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
-                  {slots.filter((s) => s === p.id).length}
-                </span>
+    <SectionCard
+      title="Photo Selector"
+      subtitle={isSinglePhotoMode ? "Select photo to export" : "Select photo to place in slots"}
+      icon={<ImageIcon className="w-4 h-4 text-brand-primary" />}
+      className="border border-[#0b1e3a]/8 select-none"
+    >
+      <div className="max-h-48 overflow-y-auto space-y-2.5 pr-1">
+        {people.map((p, idx) => {
+          const isSelected = selectedPersonId === p.id;
+          return (
+            <div
+              key={p.id}
+              className={`flex items-center justify-between p-2 rounded-xl cursor-pointer border transition-all duration-150
+                ${isSelected
+                  ? 'border-brand-primary bg-brand-light/30 ring-1 ring-brand-primary'
+                  : 'border-[#0b1e3a]/6 hover:border-brand-primary/20 hover:bg-gray-50/50'
+                }`}
+              onClick={() => onSelectPerson(p.id)}
+            >
+              <div className="flex items-center gap-2.5">
+                {p.finalPhotoUrl ? (
+                  <img
+                    src={p.finalPhotoUrl}
+                    className="w-10 h-10 object-cover rounded-lg shadow-sm border border-[#0b1e3a]/6"
+                    alt={`Portrait ${idx + 1}`}
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400">
+                    <Camera className="w-4 h-4" />
+                  </div>
+                )}
+                <div>
+                  <span className="font-semibold text-xs text-gray-800">Portrait Photo {idx + 1}</span>
+                  <p className="text-[10px] text-gray-400 mt-0.5 leading-none">Ready for export</p>
+                </div>
               </div>
-            )}
-          </div>
-        ))}
+              {!isSinglePhotoMode && (
+                <div className="flex items-center gap-2 pr-1">
+                  <span className="text-[10px] font-bold text-brand-accent bg-brand-light px-2.5 py-0.5 rounded-full border border-brand-border">
+                    {slots.filter((s) => s === p.id).length} Placed
+                  </span>
+                </div>
+              )}
+            </div>
+          );
+        })}
         {people.length === 0 && (
-          <p className="text-sm text-gray-500 text-center py-4">No photos available.</p>
+          <EmptyState
+            icon={<Camera className="w-5 h-5 text-gray-400" />}
+            title="No Photos Available"
+            description="Go back and upload a photo to populate the grid sheet selector."
+          />
         )}
       </div>
-    </div>
+    </SectionCard>
   );
 });
 

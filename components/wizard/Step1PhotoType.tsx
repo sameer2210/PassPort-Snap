@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import { templates } from '@/lib/config';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { SectionCard } from '@/components/ui/SectionCard';
+import { SettingsRow } from '@/components/ui/SettingsRow';
+import { ActionGroup } from '@/components/ui/ActionGroup';
 import { Button } from '@/components/ui/button';
+import { Globe, Settings2, ArrowRight } from 'lucide-react';
 
 export function Step1PhotoType() {
   const { templateId, setTemplateId, setStep, customTemplateMm, setCustomTemplateMm } = useAppStore();
   const [showCustom, setShowCustom] = useState(templateId === 'custom');
-
-  // Restored previously saved template via Zustand persistence automatically.
-
 
   const handleSelect = (id: string) => {
     if (id === 'custom') {
@@ -30,65 +30,120 @@ export function Step1PhotoType() {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-4 space-y-6">
-      <div className="text-center space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Choose Photo Size</h2>
-        <p className="text-gray-500">Select the country or size you need.</p>
+    <div className="w-full max-w-4xl mx-auto space-y-8 py-2">
+      <div className="space-y-2 text-center md:text-left">
+        <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Choose Photo Size</h2>
+        <p className="text-sm text-gray-500 max-w-lg">
+          Select a standard country passport size template or define your own custom physical measurements.
+        </p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
-        {templates.map((t) => (
-          <Card 
-            key={t.id} 
-            className={`cursor-pointer transition-all hover:border-blue-500 hover:shadow-md ${templateId === t.id && !showCustom ? 'border-blue-600 ring-1 ring-blue-600' : ''}`}
-            onClick={() => handleSelect(t.id)}
-          >
-            <CardHeader>
-              <CardTitle>{t.label}</CardTitle>
-              <CardDescription>{t.countries}</CardDescription>
-            </CardHeader>
-          </Card>
-        ))}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {templates.map((t) => {
+          const isSelected = templateId === t.id && !showCustom;
+          return (
+            <div
+              key={t.id}
+              onClick={() => handleSelect(t.id)}
+              className="group cursor-pointer select-none"
+            >
+              <SectionCard 
+                title={t.label} 
+                subtitle={t.countries}
+                icon={<Globe className="w-4 h-4 text-brand-primary" />}
+                className={`h-full border transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md
+                  ${isSelected 
+                    ? 'border-brand-primary bg-brand-light/20 ring-1 ring-brand-primary' 
+                    : 'border-[#0b1e3a]/8 hover:border-brand-primary/45'
+                  }`}
+              >
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-50">
+                  <span className="text-[10px] font-bold text-brand-accent/50 uppercase tracking-widest">Dimensions</span>
+                  <span className="text-xs font-semibold text-gray-700 bg-gray-100 px-2 py-0.5 rounded-md">
+                    {t.widthMm} x {t.heightMm} mm
+                  </span>
+                </div>
+              </SectionCard>
+            </div>
+          );
+        })}
 
-        <Card 
-          className={`cursor-pointer transition-all hover:border-blue-500 hover:shadow-md ${showCustom ? 'border-blue-600 ring-1 ring-blue-600' : ''}`}
+        {/* Custom dimensions card */}
+        <div
           onClick={() => handleSelect('custom')}
+          className="group cursor-pointer select-none"
         >
-          <CardHeader>
-            <CardTitle>Custom Dimensions</CardTitle>
-            <CardDescription>Enter your own width and height</CardDescription>
-          </CardHeader>
-          {showCustom && (
-            <CardContent className="space-y-4" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2 flex flex-col">
-                  <label htmlFor="custom-width" className="text-sm font-medium">Width (mm)</label>
-                  <input 
-                    id="custom-width" 
-                    type="number" 
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    value={customTemplateMm.widthMm} 
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCustomTemplateMm({ ...customTemplateMm, widthMm: Number(e.target.value) })}
-                    min={10} max={200}
-                  />
-                </div>
-                <div className="space-y-2 flex flex-col">
-                  <label htmlFor="custom-height" className="text-sm font-medium">Height (mm)</label>
-                  <input 
-                    id="custom-height" 
-                    type="number" 
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    value={customTemplateMm.heightMm} 
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCustomTemplateMm({ ...customTemplateMm, heightMm: Number(e.target.value) })}
-                    min={10} max={200}
-                  />
-                </div>
+          <SectionCard 
+            title="Custom Dimensions" 
+            subtitle="Configure physical millimeters size"
+            icon={<Settings2 className="w-4 h-4 text-brand-primary" />}
+            className={`border transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md
+              ${showCustom 
+                ? 'border-brand-primary bg-brand-light/10 ring-1 ring-brand-primary' 
+                : 'border-[#0b1e3a]/8 hover:border-brand-primary/45'
+              }`}
+          >
+            {showCustom ? (
+              <div 
+                className="space-y-4 pt-3 mt-2 border-t border-gray-100" 
+                onClick={(e: React.MouseEvent) => e.stopPropagation()}
+              >
+                <SettingsRow
+                  label="Width"
+                  description="Millimeter width of printed photo"
+                  control={
+                    <div className="relative w-32 flex items-center">
+                      <input 
+                        id="custom-width" 
+                        type="number" 
+                        className="w-full h-9 rounded-lg border border-brand-border bg-white px-3 py-1.5 text-xs text-right pr-9 font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                        value={customTemplateMm.widthMm || ''} 
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCustomTemplateMm({ ...customTemplateMm, widthMm: Number(e.target.value) })}
+                        min={10} max={200}
+                      />
+                      <span className="absolute right-3 text-[10px] font-bold text-gray-400 select-none">mm</span>
+                    </div>
+                  }
+                />
+                <SettingsRow
+                  label="Height"
+                  description="Millimeter height of printed photo"
+                  control={
+                    <div className="relative w-32 flex items-center">
+                      <input 
+                        id="custom-height" 
+                        type="number" 
+                        className="w-full h-9 rounded-lg border border-brand-border bg-white px-3 py-1.5 text-xs text-right pr-9 font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                        value={customTemplateMm.heightMm || ''} 
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCustomTemplateMm({ ...customTemplateMm, heightMm: Number(e.target.value) })}
+                        min={10} max={200}
+                      />
+                      <span className="absolute right-3 text-[10px] font-bold text-gray-400 select-none">mm</span>
+                    </div>
+                  }
+                  divider
+                />
+
+                <ActionGroup className="pt-2">
+                  <Button 
+                    className="w-full bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold h-9 rounded-lg flex items-center justify-center gap-1.5 transition-all duration-120" 
+                    onClick={handleCustomSubmit}
+                  >
+                    Continue with Custom Size
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Button>
+                </ActionGroup>
               </div>
-              <Button className="w-full" onClick={handleCustomSubmit}>Continue with Custom Size</Button>
-            </CardContent>
-          )}
-        </Card>
+            ) : (
+              <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-50">
+                <span className="text-[10px] font-bold text-brand-accent/50 uppercase tracking-widest">Dimensions</span>
+                <span className="text-xs font-semibold text-gray-400">Configure</span>
+              </div>
+            )}
+          </SectionCard>
+        </div>
       </div>
     </div>
   );
 }
+export default Step1PhotoType;

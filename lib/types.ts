@@ -24,6 +24,7 @@ export type Person = {
   rotation?: number;
   brightness?: number;
   contrast?: number;
+  sharpness?: number;
 };
 
 export type SheetSize = {

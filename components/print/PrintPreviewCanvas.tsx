@@ -1,8 +1,10 @@
 /* eslint-disable @next/next/no-img-element */
-import React from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { UnitConverter, DpiProfile } from '@/lib/print';
 import { PrintPreviewSlot } from './PrintPreviewSlot';
 import type { PreviewState, PreviewActions } from './types';
+import { StatusBadge } from '@/components/ui/StatusBadge';
+import { Image as ImageIcon } from 'lucide-react';
 
 export interface PrintPreviewCanvasProps {
   readonly state: PreviewState;
@@ -23,16 +25,50 @@ export const PrintPreviewCanvas: React.FC<PrintPreviewCanvasProps> = React.memo(
   } = state;
   const { onSlotClick } = actions;
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  // ResizeObserver to calculate dynamic scale factor based on layout dimensions
+  useEffect(() => {
+    if (isSinglePhotoMode || !containerRef.current || paperWidthPx <= 0 || paperHeightPx <= 0) {
+      return;
+    }
+
+    const element = containerRef.current;
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        const padding = 24; // Padding around sheet preview
+        
+        const scaleW = (width - padding) / paperWidthPx;
+        const scaleH = (height - padding) / paperHeightPx;
+        
+        // Find min scale to fit container without overflowing
+        const newScale = Math.min(scaleW, scaleH);
+        // Floor at 0.15, ceiling at 1.0 (to avoid blurring elements)
+        setScale(Math.max(0.15, Math.min(newScale, 1.0)));
+      }
+    });
+
+    resizeObserver.observe(element);
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [paperWidthPx, paperHeightPx, isSinglePhotoMode]);
+
   return (
-    <div className="flex-1 w-full flex items-center justify-center overflow-auto">
+    <div 
+      ref={containerRef} 
+      className="flex-1 w-full h-full flex items-center justify-center overflow-hidden min-h-[460px] relative"
+    >
       {!isSinglePhotoMode ? (
         previewLayout && (
           <div
-            className="bg-white shadow-2xl relative transition-all"
+            className="bg-white shadow-lg border border-[#0b1e3a]/6 relative transition-all duration-150 flex-shrink-0"
             style={{
               width: `${paperWidthPx}px`,
               height: `${paperHeightPx}px`,
-              transform: `scale(2.5)`,
+              transform: `scale(${scale})`,
               transformOrigin: 'center',
             }}
           >
@@ -99,8 +135,8 @@ export const PrintPreviewCanvas: React.FC<PrintPreviewCanvasProps> = React.memo(
                     top: `${top}px`,
                     width: isVertical ? '0px' : `${width}px`,
                     height: isVertical ? `${height}px` : '0px',
-                    borderLeft: isVertical ? '0.5px dashed #969696' : 'none',
-                    borderTop: !isVertical ? '0.5px dashed #969696' : 'none',
+                    borderLeft: isVertical ? '0.5px dashed #9ca3af' : 'none',
+                    borderTop: !isVertical ? '0.5px dashed #9ca3af' : 'none',
                   }}
                 />
               );
@@ -120,9 +156,9 @@ export const PrintPreviewCanvas: React.FC<PrintPreviewCanvasProps> = React.memo(
             const h = UnitConverter.convert(template.heightMm, 'mm', 'px', DpiProfile.Preview);
 
             return (
-              <div className="bg-white p-4 rounded-lg shadow-xl flex flex-col items-center gap-4">
+              <div className="bg-white p-5 rounded-2xl shadow-md border border-[#0b1e3a]/6 flex flex-col items-center gap-4 select-none max-w-sm">
                 <div
-                  className="border shadow-inner bg-gray-50 flex items-center justify-center overflow-hidden"
+                  className="border border-gray-150 shadow-inner bg-gray-50 flex items-center justify-center overflow-hidden rounded-xl"
                   style={{
                     width: `${w * 3}px`,
                     height: `${h * 3}px`,
@@ -130,9 +166,12 @@ export const PrintPreviewCanvas: React.FC<PrintPreviewCanvasProps> = React.memo(
                 >
                   <img src={photoSrc} className="w-full h-full object-cover" alt="Single Place" />
                 </div>
-                <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider">
-                  {template.label}
-                </span>
+                <div className="flex flex-col items-center space-y-1">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">Export size</span>
+                  <StatusBadge variant="info" icon={<ImageIcon className="w-3.5 h-3.5" />}>
+                    {template.label} ({template.widthMm}x{template.heightMm}mm)
+                  </StatusBadge>
+                </div>
               </div>
             );
           })()
@@ -143,3 +182,4 @@ export const PrintPreviewCanvas: React.FC<PrintPreviewCanvasProps> = React.memo(
 });
 
 PrintPreviewCanvas.displayName = 'PrintPreviewCanvas';
+export default PrintPreviewCanvas;

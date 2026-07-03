@@ -1,3 +1,6 @@
+import { IMAGE_ADJUSTMENT_DEFAULTS } from '../hooks/imageAdjustmentDefaults';
+import { applySharpness } from '../hooks/imageSharpness';
+
 export const createImage = (url: string): Promise<HTMLImageElement> =>
   new Promise((resolve, reject) => {
     const image = new Image();
@@ -12,10 +15,11 @@ export async function getCroppedImg(
   pixelCrop: { x: number; y: number; width: number; height: number },
   rotation = 0,
   flip = { horizontal: false, vertical: false },
-  brightness = 100,
-  contrast = 100,
+  brightness: number = IMAGE_ADJUSTMENT_DEFAULTS.brightness,
+  contrast: number = IMAGE_ADJUSTMENT_DEFAULTS.contrast,
   targetWidth?: number,
-  targetHeight?: number
+  targetHeight?: number,
+  sharpness: number = IMAGE_ADJUSTMENT_DEFAULTS.sharpness
 ): Promise<string | null> {
   const image = await createImage(imageSrc);
   const canvas = document.createElement('canvas');
@@ -68,6 +72,13 @@ export async function getCroppedImg(
 
   // Draw the cropped image onto the final canvas, scaling it if necessary
   ctx.drawImage(tempCanvas, 0, 0, pixelCrop.width, pixelCrop.height, 0, 0, finalWidth, finalHeight);
+
+  // Apply sharpness filter if needed
+  if (sharpness !== 50) {
+    const finalImgData = ctx.getImageData(0, 0, finalWidth, finalHeight);
+    const sharpenedData = applySharpness(finalImgData, sharpness);
+    ctx.putImageData(sharpenedData, 0, 0);
+  }
 
   // Return as base64 data URL so it can be safely persisted in IndexedDB across reloads
   const dataUrl = canvas.toDataURL('image/jpeg', 0.95);

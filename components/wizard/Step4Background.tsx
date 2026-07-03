@@ -2,30 +2,34 @@
 import React, { useState, useEffect } from 'react';
 import { useAppStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { SectionCard } from '@/components/ui/SectionCard';
+import { PreviewContainer } from '@/components/ui/PreviewContainer';
+import { ActionGroup } from '@/components/ui/ActionGroup';
+import { LoadingOverlay } from '@/components/ui/LoadingOverlay';
 import { useBackgroundRemoval } from '@/hooks/useBackgroundRemoval';
 import { BackgroundChoice } from '@/lib/types';
+import { Palette, ArrowLeft, ArrowRight, RotateCcw } from 'lucide-react';
 
 export function Step4Background() {
-  const { 
-    people, 
-    activePersonId, 
-    backgroundChoice, 
-    setBackgroundChoice, 
-    customBackgroundColor, 
-    setCustomBackgroundColor, 
-    setStep 
+  const {
+    people,
+    activePersonId,
+    backgroundChoice,
+    setBackgroundChoice,
+    customBackgroundColor,
+    setCustomBackgroundColor,
+    setStep
   } = useAppStore();
 
   const person = people.find(p => p.id === activePersonId);
   const { processPreview, processHighRes, cancelActiveTask, status, processing, error } = useBackgroundRemoval();
-  
+
   const [customColor, setCustomColor] = useState(customBackgroundColor || '#ffffff');
 
   const bgOptions = [
     { id: 'original', label: 'Original', color: 'original' },
-    { id: 'white', label: 'White', color: '#ffffff' },
-    { id: 'blue', label: 'Light blue', color: '#e0f2fe' },
+    { id: 'white', label: 'White Color', color: '#ffffff' },
+    { id: 'blue', label: 'Light Blue', color: '#e0f2fe' },
     { id: 'custom', label: 'Custom Color', color: 'custom' },
   ] as const;
 
@@ -34,17 +38,13 @@ export function Step4Background() {
   // Process preview background whenever the selection or custom color changes
   useEffect(() => {
     if (!personId) return;
-    
-    // Trigger preview composition / background removal
     processPreview(personId, backgroundChoice, customColor);
 
-    // Cancel active background task on cleanups/unmount
     return () => {
       cancelActiveTask();
     };
   }, [personId, backgroundChoice, customColor, processPreview, cancelActiveTask]);
 
-  // Sync color changes to Zustand
   const handleCustomColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setCustomColor(val);
@@ -53,8 +53,6 @@ export function Step4Background() {
 
   const handleNext = async () => {
     if (!person) return;
-    
-    // Trigger high-res processing
     const success = await processHighRes(person.id, backgroundChoice, customColor);
     if (success) {
       setStep(5);
@@ -65,146 +63,193 @@ export function Step4Background() {
 
   if (!person) return null;
 
-  // Get current preview image: falls back to cropped photo url
   const imgToUse = person.backgroundPreviewUrl || person.croppedPhotoUrl || person.previewPhotoUrl || '';
 
-  // Match status strings to user-friendly progress text
   const getStatusText = () => {
     switch (status) {
       case 'checking-model':
-        return 'Checking model cache...';
+        return 'Verifying Offline Cache';
       case 'downloading-model':
-        return 'Downloading offline AI model (this happens once)...';
+        return 'Downloading offline AI model...';
       case 'initializing-model':
-        return 'Initializing neural engine...';
+        return 'Starting neural engine...';
       case 'processing-preview':
-        return 'Removing background from preview...';
+        return 'Removing background portrait...';
       case 'processing-highres':
-        return 'Processing high-resolution photo...';
+        return 'Exporting high-resolution photo...';
       case 'compositing':
-        return 'Drawing composite background...';
+        return 'Painting canvas background...';
       default:
         return 'Applying background...';
     }
   };
 
+  const getStatusSubText = () => {
+    if (status === 'downloading-model') {
+      return 'This occurs once and may take a moment. The model (~50MB) runs entirely offline in your browser.';
+    }
+    return 'Processing portrait image locally...';
+  };
+
   return (
-    <div className="w-full max-w-3xl mx-auto p-4 space-y-8">
-      <div className="text-center space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Choose Background</h2>
-        <p className="text-gray-500">Select a clean background for your photo.</p>
+    <div className="w-full max-w-4xl mx-auto space-y-6 py-2">
+      <div className="space-y-2 text-center md:text-left">
+        <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Normalise Background</h2>
+        <p className="text-sm text-gray-500 max-w-lg">
+          Isolate the subject and apply a clean, compliant passport background. All processing runs locally inside your browser.
+        </p>
       </div>
 
       {error && (
-        <div className="p-4 bg-red-50 text-red-700 rounded-lg text-sm flex flex-col space-y-2">
-          <span>Error: {error}</span>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="w-32 text-red-700 border-red-200 hover:bg-red-100" 
+        <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs flex items-center justify-between gap-4 select-none">
+          <div className="flex flex-col space-y-1">
+            <span className="font-semibold">AI Processing Error</span>
+            <span>{error}</span>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-red-700 border-red-200 hover:bg-red-100 h-8 text-[11px] font-bold rounded-lg flex items-center gap-1.5 transition-all duration-120"
             onClick={() => processPreview(person.id, backgroundChoice, customColor)}
           >
-            Retry
+            <RotateCcw className="w-3 h-3" />
+            Retry Process
           </Button>
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {bgOptions.map((opt) => {
-          const isSelected = backgroundChoice === opt.id;
-          const isCustom = opt.id === 'custom';
-          const cardBgColor = opt.id === 'original' 
-            ? '#f3f4f6' 
-            : opt.id === 'custom' 
-              ? customColor 
-              : opt.color;
+      <div className="flex flex-col md:flex-row gap-6 items-start">
+        {/* Left Side: Preview frame */}
+        <div className="flex-1 w-full">
+          <PreviewContainer
+            title="Composite Output Preview"
+            aspectRatio="aspect-[3/4]"
+            className="h-[430px] w-full"
+            loading={false} // We handle loading state custom-tailored with detailed subtexts using LoadingOverlay
+          >
+            {processing && (
+              <LoadingOverlay
+                container
+                title={getStatusText()}
+                subtitle={getStatusSubText()}
+              />
+            )}
 
-          return (
-            <Card 
-              key={opt.id}
-              className={`cursor-pointer overflow-hidden transition-all hover:border-blue-500 hover:shadow-md ${isSelected ? 'border-blue-600 ring-2 ring-blue-600' : ''}`}
-              onClick={() => {
-                if (!processing) {
-                  setBackgroundChoice(opt.id as BackgroundChoice);
-                }
+            <div
+              className="absolute inset-0 flex items-center justify-center p-4 transition-colors duration-300"
+              style={{
+                backgroundColor: backgroundChoice === 'original'
+                  ? '#ffffff'
+                  : backgroundChoice === 'custom'
+                    ? customColor
+                    : backgroundChoice === 'white'
+                      ? '#ffffff'
+                      : '#e0f2fe'
               }}
             >
-              <div 
-                className="h-32 w-full flex items-center justify-center p-2 relative"
-                style={{ backgroundColor: cardBgColor }}
-              >
-                {/* Optional: Add a subtle grid behind original/custom to show background context */}
-                {(opt.id === 'original' || opt.id === 'custom') && (
-                  <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)', backgroundSize: '10px 10px', backgroundPosition: '0 0, 0 5px, 5px -5px, -5px 0px' }} />
-                )}
+              {backgroundChoice === 'original' && (
+                <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)', backgroundSize: '10px 10px', backgroundPosition: '0 0, 0 5px, 5px -5px, -5px 0px' }} />
+              )}
+              {imgToUse ? (
+                <img
+                  src={imgToUse}
+                  alt="Final Preview"
+                  className="max-h-full max-w-full object-contain rounded shadow-lg transition-transform duration-200"
+                />
+              ) : (
+                <span className="text-xs font-medium text-gray-400">Loading composite...</span>
+              )}
+            </div>
+          </PreviewContainer>
+        </div>
 
-                {imgToUse && (
-                  <img 
-                    src={imgToUse} 
-                    alt={opt.label} 
-                    className="max-h-full max-w-full object-contain shadow-sm relative z-10"
-                  />
-                )}
-              </div>
-              <CardContent className="p-3 text-center border-t flex flex-col items-center justify-center space-y-1">
-                <span className="font-medium text-xs">{opt.label}</span>
-                {isCustom && isSelected && (
-                  <input 
-                    type="color" 
-                    value={customColor} 
-                    onChange={handleCustomColorChange}
-                    className="w-8 h-6 border cursor-pointer mt-1"
+        {/* Right Side: Options and buttons */}
+        <div className="w-full md:w-85 space-y-6">
+          <SectionCard
+            title="Background Preset"
+            subtitle="Choose a passport compliant backdrop"
+            icon={<Palette className="w-4 h-4 text-brand-primary" />}
+            className="border border-[#0b1e3a]/8 select-none"
+          >
+            <div className="grid grid-cols-2 gap-3">
+              {bgOptions.map((opt) => {
+                const isSelected = backgroundChoice === opt.id;
+                const isCustom = opt.id === 'custom';
+                const buttonBgColor = opt.id === 'original'
+                  ? '#f3f4f6'
+                  : opt.id === 'custom'
+                    ? customColor
+                    : opt.color;
+
+                return (
+                  <button
+                    key={opt.id}
                     disabled={processing}
-                  />
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                    onClick={() => setBackgroundChoice(opt.id as BackgroundChoice)}
+                    className={`flex flex-col items-center justify-between p-3.5 border rounded-xl cursor-pointer text-center group transition-all duration-150 focus:outline-none w-full
+                      ${isSelected
+                        ? 'border-brand-primary bg-brand-light/10 ring-1 ring-brand-primary'
+                        : 'border-[#0b1e3a]/8 hover:border-brand-primary/45 hover:bg-gray-50/50'
+                      }`}
+                  >
+                    {/* Tiny Color Dot preview inside card */}
+                    <div
+                      className="w-8 h-8 rounded-full border border-gray-200 shadow-sm flex-shrink-0 flex items-center justify-center relative overflow-hidden"
+                      style={{ backgroundColor: isCustom ? customColor : buttonBgColor }}
+                    >
+                      {opt.id === 'original' && (
+                        <div className="absolute inset-0 opacity-15" style={{ backgroundImage: 'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)', backgroundSize: '6px 6px', backgroundPosition: '0 0, 0 3px, 3px -3px, -3px 0px' }} />
+                      )}
+                      {isCustom && isSelected && (
+                        <input
+                          type="color"
+                          value={customColor}
+                          onChange={handleCustomColorChange}
+                          onClick={(e) => e.stopPropagation()}
+                          className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                        />
+                      )}
+                    </div>
 
-      {processing && (
-        <div className="flex flex-col items-center justify-center p-6 space-y-3 bg-gray-50 border rounded-lg">
-          <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-sm font-medium text-gray-700 animate-pulse">{getStatusText()}</span>
+                    <span className="font-semibold text-[10px] text-gray-800 uppercase tracking-wider mt-3">
+                      {opt.label}
+                    </span>
+                    {isCustom && isSelected && (
+                      <span className="text-[9px] text-brand-primary font-bold mt-0.5">
+                        {customColor.toUpperCase()}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </SectionCard>
+
+          {/* Navigation Action Buttons */}
+          <div className="pt-2 border-t border-gray-100">
+            <ActionGroup className="w-full">
+              <Button
+                variant="outline"
+                className="border-gray-200 hover:bg-gray-50 text-gray-700 h-9 px-4 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all duration-120"
+                onClick={() => setStep(3)}
+                disabled={processing}
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                Back
+              </Button>
+              <Button
+                className="flex-1 bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold h-9 rounded-lg flex items-center justify-center gap-1.5 transition-all duration-120"
+                onClick={handleNext}
+                disabled={processing}
+              >
+                {processing ? 'Processing...' : 'Continue'}
+                {!processing && <ArrowRight className="w-3.5 h-3.5" />}
+              </Button>
+            </ActionGroup>
+          </div>
         </div>
-      )}
-
-      {/* Main Full-Size Preview Display */}
-      <div className="flex justify-center bg-gray-50 rounded-xl p-6 border shadow-inner">
-        <div 
-          className="relative max-w-xs aspect-[3/4] flex items-center justify-center border shadow-md p-4 rounded bg-white overflow-hidden"
-          style={{ 
-            backgroundColor: backgroundChoice === 'original' 
-              ? '' 
-              : backgroundChoice === 'custom' 
-                ? customColor 
-                : backgroundChoice === 'white' 
-                  ? '#ffffff' 
-                  : '#e0f2fe' 
-          }}
-        >
-          {backgroundChoice === 'original' && (
-            <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)', backgroundSize: '10px 10px', backgroundPosition: '0 0, 0 5px, 5px -5px, -5px 0px' }} />
-          )}
-          {imgToUse ? (
-            <img 
-              src={imgToUse} 
-              alt="Final Preview" 
-              className="max-h-full max-w-full object-contain relative z-10"
-            />
-          ) : (
-            <span className="text-xs text-gray-400">Loading photo...</span>
-          )}
-        </div>
-      </div>
-
-      <div className="flex justify-center pt-4 gap-4">
-        <Button variant="secondary" onClick={() => setStep(3)} disabled={processing}>Back</Button>
-        <Button size="lg" onClick={handleNext} className="w-48" disabled={processing}>
-          {processing ? 'Processing...' : 'Continue'}
-        </Button>
       </div>
     </div>
   );
 }
+export default Step4Background;
