@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { SettingsRow } from '@/components/ui/SettingsRow';
 import { ActionGroup } from '@/components/ui/ActionGroup';
-import { Plus, Settings2, Sparkles, Trash2 } from 'lucide-react';
+import { Plus, Settings2, Sparkles, RotateCcw } from 'lucide-react';
 import type { ToolbarState, ToolbarActions } from './types';
 
 export interface PrintToolbarProps {
@@ -12,14 +12,14 @@ export interface PrintToolbarProps {
 }
 
 export const PrintToolbar: React.FC<PrintToolbarProps> = React.memo(({ state, actions }) => {
-  const { isSinglePhotoMode, sheetSizeId, showCutlines, addBorder, paperSizes } = state;
+  const { isSinglePhotoMode, sheetSizeId, showCutlines, paperSizes } = state;
   const {
     onSheetSizeIdChange,
     onShowCutlinesChange,
-    onAddBorderChange,
     onAutoFill,
     onAddPhoto,
-    onStartOver,
+    onReset,
+    onNewImage,
   } = actions;
 
   return (
@@ -82,40 +82,36 @@ export const PrintToolbar: React.FC<PrintToolbarProps> = React.memo(({ state, ac
                   />
                 }
               />
-
-              <SettingsRow
-                label="Add Borders"
-                description="Draw solid outline around each photo"
-                control={
-                  <input
-                    type="checkbox"
-                    checked={addBorder}
-                    onChange={(e) => onAddBorderChange(e.target.checked)}
-                    className="w-4.5 h-4.5 rounded border-brand-border text-brand-primary focus:ring-brand-primary cursor-pointer accent-brand-primary"
-                  />
-                }
-              />
             </div>
           </SectionCard>
         </>
       )}
 
       {/* Footer Controls */}
-      <ActionGroup className="w-full">
+      <ActionGroup className="w-full" equalWidth={true}>
         <Button 
           variant="outline" 
-          className="flex-1 h-9 text-xs font-semibold border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg transition-all duration-120" 
+          className="h-9 text-xs font-semibold border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg transition-all duration-120 cursor-pointer" 
           onClick={onAddPhoto}
         >
           <Plus className="w-3.5 h-3.5 mr-1" />
           Add Another Photo
         </Button>
-        <Button
-          variant="ghost"
-          className="h-9 px-3 text-xs font-semibold text-brand-danger hover:text-red-700 hover:bg-red-50/50 rounded-lg transition-all duration-120"
-          onClick={onStartOver}
+        <Button 
+          variant="outline" 
+          className="h-9 text-xs font-semibold border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg transition-all duration-120 cursor-pointer" 
+          onClick={onReset}
         >
-          <Trash2 className="w-3.5 h-3.5" />
+          <RotateCcw className="w-3.5 h-3.5 mr-1" />
+          Reset
+        </Button>
+        <Button
+          variant="outline"
+          className="h-9 text-xs font-semibold border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg transition-all duration-120 cursor-pointer"
+          onClick={onNewImage}
+        >
+          <Plus className="w-3.5 h-3.5 mr-1" />
+          New Image
         </Button>
       </ActionGroup>
     </div>

@@ -8,7 +8,9 @@ import { usePrintActions } from '@/hooks/usePrintActions';
 import { usePrintPreview } from '@/hooks/usePrintPreview';
 import { DpiProfile, PaperRegistry, TemplateRegistry } from '@/lib/print';
 import { useAppStore } from '@/lib/store';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
+import { PRINT_DEFAULTS } from '@/lib/constants/printDefaults';
+import { processUploadedFile } from '@/lib/image/uploadHelper';
 
 export function Step5PrintSheet() {
   const { people, templateId, sheetSizeId, setSheetSizeId, updatePerson, customTemplateMm } =
@@ -17,8 +19,8 @@ export function Step5PrintSheet() {
   const [isSinglePhotoMode, setIsSinglePhotoMode] = useState(false);
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(people[0]?.id || null);
   const [showCutlines, setShowCutlines] = useState(false);
-  const [addBorder, setAddBorder] = useState(false);
   const [slots, setSlots] = useState<Array<string | null>>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Paper & template lookups
   const paper = PaperRegistry.get(sheetSizeId) || PaperRegistry.getAll()[0];
@@ -51,7 +53,7 @@ export function Step5PrintSheet() {
     paper,
     template,
     slots,
-    settings: { addBorder, showCutlines },
+    settings: { showCutlines },
   });
 
   const { capacity, layout, paperWidthPx, paperHeightPx } = previewDimensions;
@@ -89,26 +91,52 @@ export function Step5PrintSheet() {
     setSlots,
     people,
     selectedPersonId,
-    addBorder,
     showCutlines,
     updatePerson,
   });
 
   // Action footer handlers
+  const resetPrintSettings = useCallback(() => {
+    setSheetSizeId(PRINT_DEFAULTS.defaultSheetSizeId);
+    setShowCutlines(PRINT_DEFAULTS.defaultShowCutlines);
+    setIsSinglePhotoMode(PRINT_DEFAULTS.defaultSinglePhotoMode);
+    people.forEach((p) => {
+      updatePerson(p.id, { count: PRINT_DEFAULTS.defaultPhotoCount });
+    });
+  }, [people, setSheetSizeId, updatePerson]);
+
   const handleAddPhoto = useCallback(() => {
     const { setActivePersonId, setStep } = useAppStore.getState();
     setActivePersonId('');
     setStep(2);
   }, []);
 
-  const handleStartOver = useCallback(() => {
-    if (window.confirm('Start over with a new photo? This will clear all current photos.')) {
-      const { resetStore } = useAppStore.getState();
-      if (resetStore) {
-        resetStore();
-      } else {
-        useAppStore.setState({ people: [], activePersonId: null, step: 1 });
+  const handleDeletePerson = useCallback((id: string) => {
+    const { removePerson } = useAppStore.getState();
+    removePerson(id);
+  }, []);
+
+  const handleNewImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      try {
+        const file = files[0];
+        const { highResPhotoUrl, previewPhotoUrl } = await processUploadedFile(file);
+        const newPersonId = Math.random().toString(36).substring(7);
+
+        const { addPerson } = useAppStore.getState();
+        addPerson(newPersonId, previewPhotoUrl, highResPhotoUrl);
+      } catch (err) {
+        console.error(err);
+        alert('Failed to process image file.');
       }
+    }
+  }, []);
+
+  const handleTriggerFileInput = useCallback(() => {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+      fileInputRef.current.click();
     }
   }, []);
 
@@ -123,17 +151,16 @@ export function Step5PrintSheet() {
     isSinglePhotoMode,
     sheetSizeId,
     showCutlines,
-    addBorder,
     paperSizes: PaperRegistry.getAll(),
   };
 
   const toolbarActions = {
     onSheetSizeIdChange: setSheetSizeId,
     onShowCutlinesChange: setShowCutlines,
-    onAddBorderChange: setAddBorder,
     onAutoFill: handleAutoFill,
     onAddPhoto: handleAddPhoto,
-    onStartOver: handleStartOver,
+    onReset: resetPrintSettings,
+    onNewImage: handleTriggerFileInput,
   };
 
   const exportState = {
@@ -158,7 +185,6 @@ export function Step5PrintSheet() {
     slots,
     people,
     selectedPersonId,
-    addBorder,
     showCutlines,
     paperWidthPx,
     paperHeightPx,
@@ -231,6 +257,14 @@ export function Step5PrintSheet() {
               slots={slots}
               isSinglePhotoMode={isSinglePhotoMode}
               onSelectPerson={handleSelectPerson}
+              onDeletePerson={handleDeletePerson}
+            />
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/heic"
+              className="hidden"
+              onChange={handleNewImageUpload}
             />
           </div>
         </div>

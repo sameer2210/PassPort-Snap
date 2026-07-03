@@ -10,8 +10,9 @@ import {
   DpiProfile,
 } from '@/lib/print';
 
+import { PRINT_DEFAULTS } from '@/lib/constants/printDefaults';
+
 export interface PreviewSettings {
-  readonly addBorder: boolean;
   readonly showCutlines: boolean;
 }
 
@@ -40,7 +41,7 @@ export function usePrintPreview({
   template,
   settings,
 }: UsePrintPreviewInput): UsePrintPreviewOutput {
-  const { addBorder, showCutlines } = settings;
+  const { showCutlines } = settings;
 
   // Layout calculations (Heavy layout computation - memoized)
   const layoutResult = useMemo(() => {
@@ -58,10 +59,10 @@ export function usePrintPreview({
       layout,
       slots: mockSlots,
       images: {},
-      addBorder,
+      addBorder: PRINT_DEFAULTS.addBorder,
       showCutlines,
     });
-  }, [layout, layoutResult.success, addBorder, showCutlines]);
+  }, [layout, layoutResult.success, showCutlines]);
 
   const capacity = layout ? layout.capacity : 0;
 

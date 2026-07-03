@@ -4,52 +4,24 @@ import { useAppStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { ActionGroup } from '@/components/ui/ActionGroup';
 import { UploadCloud, ArrowLeft } from 'lucide-react';
+import { processUploadedFile } from '@/lib/image/uploadHelper';
 
 export function Step2Upload() {
   const { setStep, addPerson, setTemplateId } = useAppStore();
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
-      const file = acceptedFiles[0];
-      
-      // 1. Create high-res in-memory blob URL
-      const highResPhotoUrl = URL.createObjectURL(file);
-      
-      // 2. Load into image to compress for preview
-      const img = new Image();
-      img.src = highResPhotoUrl;
-      await new Promise(resolve => { img.onload = resolve; });
-
-      // 3. Calculate new dimensions (max 2000px)
-      const MAX_DIMENSION = 2000;
-      let width = img.width;
-      let height = img.height;
-      if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
-        if (width > height) {
-          height = Math.round((height * MAX_DIMENSION) / width);
-          width = MAX_DIMENSION;
-        } else {
-          width = Math.round((width * MAX_DIMENSION) / height);
-          height = MAX_DIMENSION;
-        }
+      try {
+        const file = acceptedFiles[0];
+        const { highResPhotoUrl, previewPhotoUrl } = await processUploadedFile(file);
+        const newPersonId = Math.random().toString(36).substring(7);
+        
+        addPerson(newPersonId, previewPhotoUrl, highResPhotoUrl);
+        setStep(3);
+      } catch (err) {
+        console.error(err);
+        alert('Failed to process image file.');
       }
-
-      // 4. Draw to canvas and export as compressed JPEG Data URL
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(img, 0, 0, width, height);
-      }
-      const previewPhotoUrl = canvas.toDataURL('image/jpeg', 0.8);
-
-      const newPersonId = Math.random().toString(36).substring(7);
-      
-      // 5. Store both in Zustand
-      addPerson(newPersonId, previewPhotoUrl, highResPhotoUrl);
-      
-      setStep(3);
     }
   }, [addPerson, setStep]);
 

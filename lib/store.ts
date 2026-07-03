@@ -3,7 +3,8 @@ import { persist, StateStorage, createJSONStorage } from 'zustand/middleware';
 import { get, set, del } from 'idb-keyval';
 import type { BackgroundChoice, Person } from './types';
 import type { BackgroundStatus } from './background/backgroundTypes';
-import { templates, sheetSizes } from './config';
+import { templates } from './config';
+import { PRINT_DEFAULTS } from './constants/printDefaults';
 
 import { cleanupSessions, registerSessionUpdate } from './storage';
 
@@ -84,7 +85,7 @@ const initialState = {
   customBackgroundColor: '#ffffff',
   people: [],
   activePersonId: null,
-  sheetSizeId: sheetSizes[0].id,
+  sheetSizeId: PRINT_DEFAULTS.defaultSheetSizeId,
   customTemplateMm: { widthMm: 35, heightMm: 45 },
   backgroundStatus: 'idle' as BackgroundStatus,
   modelLoaded: false,
@@ -131,7 +132,7 @@ export const useAppStore = create<AppState>()(
           finalPhotoUrl: null, 
           highResFinalUrl: null,
           backgroundPreviewUrl: null,
-          count: 4 
+          count: PRINT_DEFAULTS.defaultPhotoCount
         };
         return { 
           people: [...state.people, newPerson],

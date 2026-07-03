@@ -5,17 +5,16 @@ export interface ToolbarState {
   readonly isSinglePhotoMode: boolean;
   readonly sheetSizeId: string;
   readonly showCutlines: boolean;
-  readonly addBorder: boolean;
   readonly paperSizes: readonly PaperSize[];
 }
 
 export interface ToolbarActions {
   readonly onSheetSizeIdChange: (id: string) => void;
   readonly onShowCutlinesChange: (show: boolean) => void;
-  readonly onAddBorderChange: (show: boolean) => void;
   readonly onAutoFill: () => void;
   readonly onAddPhoto: () => void;
-  readonly onStartOver: () => void;
+  readonly onReset: () => void;
+  readonly onNewImage: () => void;
 }
 
 export interface ExportState {
@@ -40,7 +39,6 @@ export interface PreviewState {
   readonly slots: readonly (string | null)[];
   readonly people: readonly Person[];
   readonly selectedPersonId: string | null;
-  readonly addBorder: boolean;
   readonly showCutlines: boolean;
   readonly paperWidthPx: number;
   readonly paperHeightPx: number;

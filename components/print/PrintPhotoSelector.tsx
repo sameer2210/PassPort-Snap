@@ -3,7 +3,8 @@ import React from 'react';
 import type { Person } from '@/lib/types';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Image as ImageIcon, Camera } from 'lucide-react';
+import { Image as ImageIcon, Camera, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export interface PrintPhotoSelectorProps {
   readonly people: readonly Person[];
@@ -11,6 +12,7 @@ export interface PrintPhotoSelectorProps {
   readonly slots: readonly (string | null)[];
   readonly isSinglePhotoMode: boolean;
   readonly onSelectPerson: (id: string) => void;
+  readonly onDeletePerson: (id: string) => void;
 }
 
 export const PrintPhotoSelector: React.FC<PrintPhotoSelectorProps> = React.memo(({
@@ -19,6 +21,7 @@ export const PrintPhotoSelector: React.FC<PrintPhotoSelectorProps> = React.memo(
   slots,
   isSinglePhotoMode,
   onSelectPerson,
+  onDeletePerson,
 }) => {
   return (
     <SectionCard
@@ -57,13 +60,22 @@ export const PrintPhotoSelector: React.FC<PrintPhotoSelectorProps> = React.memo(
                   <p className="text-[10px] text-gray-400 mt-0.5 leading-none">Ready for export</p>
                 </div>
               </div>
-              {!isSinglePhotoMode && (
-                <div className="flex items-center gap-2 pr-1">
-                  <span className="text-[10px] font-bold text-brand-accent bg-brand-light px-2.5 py-0.5 rounded-full border border-brand-border">
+              <div className="flex items-center gap-1.5 pr-1" onClick={(e) => e.stopPropagation()}>
+                {!isSinglePhotoMode && (
+                  <span className="text-[10px] font-bold text-brand-accent bg-brand-light px-2.5 py-0.5 rounded-full border border-brand-border select-none">
                     {slots.filter((s) => s === p.id).length} Placed
                   </span>
-                </div>
-              )}
+                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-brand-danger hover:text-red-750 hover:bg-red-50/50 rounded-lg transition-all duration-120 cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-danger focus-visible:outline-none"
+                  onClick={() => onDeletePerson(p.id)}
+                  aria-label={`Delete Portrait Photo ${idx + 1}`}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Button>
+              </div>
             </div>
           );
         })}

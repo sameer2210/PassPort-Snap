@@ -11,6 +11,8 @@ import {
 import type { ImageAdjustments } from '@/lib/print';
 import type { Person } from '@/lib/types';
 
+import { PRINT_DEFAULTS } from '@/lib/constants/printDefaults';
+
 export interface UsePrintActionsInput {
   readonly paper: PaperSize;
   readonly template: PhotoTemplate;
@@ -19,7 +21,6 @@ export interface UsePrintActionsInput {
   readonly setSlots: Dispatch<SetStateAction<Array<string | null>>>;
   readonly people: readonly Person[];
   readonly selectedPersonId: string | null;
-  readonly addBorder: boolean;
   readonly showCutlines: boolean;
   readonly updatePerson: (id: string, updates: Partial<Person>) => void;
 }
@@ -41,7 +42,6 @@ export function usePrintActions({
   setSlots,
   people,
   selectedPersonId,
-  addBorder,
   showCutlines,
   updatePerson,
 }: UsePrintActionsInput): UsePrintActionsOutput {
@@ -117,7 +117,7 @@ export function usePrintActions({
         slots,
         images: imagesMap,
         adjustments: adjustmentsMap,
-        addBorder,
+        addBorder: PRINT_DEFAULTS.addBorder,
         showCutlines,
       });
 
@@ -129,7 +129,7 @@ export function usePrintActions({
     } finally {
       setIsGenerating(false);
     }
-  }, [paper, template, slots, people, addBorder, showCutlines]);
+  }, [paper, template, slots, people, showCutlines]);
 
   const handlePrint = useCallback(() => {
     if (layout) {
