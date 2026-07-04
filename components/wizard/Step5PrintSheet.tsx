@@ -6,37 +6,31 @@ import { PrintToolbar } from '@/components/print/PrintToolbar';
 import { PreviewContainer } from '@/components/ui/PreviewContainer';
 import { usePrintActions } from '@/hooks/usePrintActions';
 import { usePrintPreview } from '@/hooks/usePrintPreview';
-import { DpiProfile, PaperRegistry, TemplateRegistry } from '@/lib/print';
+import { PaperRegistry, TemplateRegistry, PrintController } from '@/lib/print';
 import { useAppStore } from '@/lib/store';
-import { useCallback, useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useState, useMemo } from 'react';
 import { PRINT_DEFAULTS } from '@/lib/constants/printDefaults';
-import { processUploadedFile } from '@/lib/image/uploadHelper';
 
 export function Step5PrintSheet() {
-  const { people, templateId, sheetSizeId, setSheetSizeId, updatePerson, customTemplateMm } =
-    useAppStore();
+  const {
+    people,
+    templateId,
+    sheetSizeId,
+    setSheetSizeId,
+    updatePerson,
+    customTemplateMm,
+    resetEditor,
+  } = useAppStore();
 
-  const [isSinglePhotoMode, setIsSinglePhotoMode] = useState(false);
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(people[0]?.id || null);
-  const [showCutlines, setShowCutlines] = useState(false);
-  const [slots, setSlots] = useState<Array<string | null>>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showCutlines, setShowCutlines] = useState<boolean>(PRINT_DEFAULTS.defaultShowCutlines);
+  const [isSinglePhotoMode, setIsSinglePhotoMode] = useState<boolean>(PRINT_DEFAULTS.defaultSinglePhotoMode);
 
   // Paper & template lookups
   const paper = PaperRegistry.get(sheetSizeId) || PaperRegistry.getAll()[0];
-  const baseTemplate = TemplateRegistry.get(templateId) || TemplateRegistry.getAll()[0];
-  const template =
-    templateId === 'custom'
-      ? {
-          id: 'custom',
-          label: 'Custom Size',
-          widthMm: customTemplateMm.widthMm,
-          heightMm: customTemplateMm.heightMm,
-          printWidthPx: Math.round((customTemplateMm.widthMm / 25.4) * DpiProfile.Print300),
-          printHeightPx: Math.round((customTemplateMm.heightMm / 25.4) * DpiProfile.Print300),
-          countries: 'Custom',
-        }
-      : baseTemplate;
+  const template = useMemo(() => {
+    return TemplateRegistry.getTemplate(templateId, customTemplateMm);
+  }, [templateId, customTemplateMm]);
 
   // Selected person synchronization
   useEffect(() => {
@@ -48,6 +42,30 @@ export function Step5PrintSheet() {
     }
   }, [people, selectedPersonId]);
 
+  // Layout calculations (Heavy layout computation - memoized)
+  const layoutResult = useMemo(() => {
+    return PrintController.getLayout(paper, template);
+  }, [paper, template]);
+
+  const layout = layoutResult.success ? layoutResult.layout : null;
+  const capacity = layout ? layout.capacity : 0;
+
+  // Derive slots using useMemo instead of useEffect state
+  const slots = useMemo(() => {
+    if (capacity <= 0) return [];
+    const newSlots = Array(capacity).fill(null);
+    let currentIndex = 0;
+    people.forEach((p) => {
+      for (let i = 0; i < p.count; i++) {
+        if (currentIndex < capacity) {
+          newSlots[currentIndex] = p.id;
+          currentIndex++;
+        }
+      }
+    });
+    return newSlots;
+  }, [capacity, people]);
+
   // Hook 1: Preview Scene & Dimension Calculations
   const { previewScene, previewDimensions } = usePrintPreview({
     paper,
@@ -56,24 +74,7 @@ export function Step5PrintSheet() {
     settings: { showCutlines },
   });
 
-  const { capacity, layout, paperWidthPx, paperHeightPx } = previewDimensions;
-
-  // Sync slots capacity with layout changes
-  useEffect(() => {
-    if (capacity <= 0) return;
-    const newSlots = Array(capacity).fill(null);
-    let currentIndex = 0;
-    people.forEach(p => {
-      for (let i = 0; i < p.count; i++) {
-        if (currentIndex < capacity) {
-          newSlots[currentIndex] = p.id;
-          currentIndex++;
-        }
-      }
-    });
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSlots(newSlots);
-  }, [capacity, people]);
+  const { paperWidthPx, paperHeightPx } = previewDimensions;
 
   // Hook 2: Export and Slot interaction callbacks
   const {
@@ -88,7 +89,6 @@ export function Step5PrintSheet() {
     template,
     layout,
     slots,
-    setSlots,
     people,
     selectedPersonId,
     showCutlines,
@@ -103,7 +103,7 @@ export function Step5PrintSheet() {
     people.forEach((p) => {
       updatePerson(p.id, { count: PRINT_DEFAULTS.defaultPhotoCount });
     });
-  }, [people, setSheetSizeId, updatePerson]);
+  }, [people, setSheetSizeId, setShowCutlines, setIsSinglePhotoMode, updatePerson]);
 
   const handleAddPhoto = useCallback(() => {
     const { setActivePersonId, setStep } = useAppStore.getState();
@@ -116,29 +116,9 @@ export function Step5PrintSheet() {
     removePerson(id);
   }, []);
 
-  const handleNewImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      try {
-        const file = files[0];
-        const { highResPhotoUrl, previewPhotoUrl } = await processUploadedFile(file);
-        const newPersonId = Math.random().toString(36).substring(7);
-
-        const { addPerson } = useAppStore.getState();
-        addPerson(newPersonId, previewPhotoUrl, highResPhotoUrl);
-      } catch (err) {
-        console.error(err);
-        alert('Failed to process image file.');
-      }
-    }
-  }, []);
-
-  const handleTriggerFileInput = useCallback(() => {
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-      fileInputRef.current.click();
-    }
-  }, []);
+  const handleClearWorkspace = useCallback(() => {
+    resetEditor();
+  }, [resetEditor]);
 
   const handleSelectPerson = useCallback((id: string) => {
     setSelectedPersonId(id);
@@ -160,7 +140,7 @@ export function Step5PrintSheet() {
     onAutoFill: handleAutoFill,
     onAddPhoto: handleAddPhoto,
     onReset: resetPrintSettings,
-    onNewImage: handleTriggerFileInput,
+    onClearWorkspace: handleClearWorkspace,
   };
 
   const exportState = {
@@ -258,13 +238,6 @@ export function Step5PrintSheet() {
               isSinglePhotoMode={isSinglePhotoMode}
               onSelectPerson={handleSelectPerson}
               onDeletePerson={handleDeletePerson}
-            />
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/heic"
-              className="hidden"
-              onChange={handleNewImageUpload}
             />
           </div>
         </div>

@@ -1,5 +1,3 @@
-// git ls-files > project-files.txt
-
 .env.example
 .gitignore
 AGENTS.md
@@ -9,7 +7,6 @@ README.md
 app/globals.css
 app/layout.tsx
 app/page.tsx
-bun.lock
 components/print/PrintExportActions.tsx
 components/print/PrintHeader.tsx
 components/print/PrintPhotoSelector.tsx
@@ -49,9 +46,12 @@ lib/background/backgroundService.ts
 lib/background/backgroundTypes.ts
 lib/bgRemoval.ts
 lib/config.ts
+lib/constants/editorDefaults.ts
+lib/constants/printDefaults.ts
 lib/cropImage.ts
 lib/env.ts
 lib/faceDetection.ts
+lib/image/uploadHelper.ts
 lib/print/adapters/canvasAdapter.ts
 lib/print/adapters/downloadAdapter.ts
 lib/print/adapters/imageAdapter.ts

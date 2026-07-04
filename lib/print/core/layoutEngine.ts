@@ -46,7 +46,7 @@ export function calculateGrid(
   // Try caching with default parameters
   const cacheKey = LayoutCache.generateKey({
     paperId: paper.id,
-    templateId: template.id,
+    templateId: template.id === 'custom' ? `custom_${template.widthMm}x${template.heightMm}` : template.id,
     marginMm,
     gutterMm,
     searchConfig: DEFAULT_SEARCH_CONFIG

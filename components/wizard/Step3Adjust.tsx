@@ -5,11 +5,10 @@ import { PreviewContainer } from '@/components/ui/PreviewContainer';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { SettingsRow } from '@/components/ui/SettingsRow';
 import { Slider } from '@/components/ui/slider';
-import { IMAGE_ADJUSTMENT_DEFAULTS } from '@/hooks/imageAdjustmentDefaults';
-import { templates } from '@/lib/config';
+import { IMAGE_ADJUSTMENT_DEFAULTS } from '@/lib/constants/editorDefaults';
 import { getCroppedImg } from '@/lib/cropImage';
 import { detectFace, initializeFaceDetector } from '@/lib/faceDetection';
-import { DpiProfile } from '@/lib/print';
+import { TemplateRegistry } from '@/lib/print/registry/templateRegistry';
 import { useAppStore } from '@/lib/store';
 import { ArrowLeft, ArrowRight, RotateCcw, RotateCw, Sliders, Sparkles } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -19,18 +18,7 @@ import Cropper from 'react-easy-crop';
 export function Step3Adjust() {
   const { people, activePersonId, templateId, setStep, updatePerson, customTemplateMm } = useAppStore();
   const person = people.find(p => p.id === activePersonId);
-  const baseTemplate = templates.find(t => t.id === templateId) || templates[0];
-  const template = templateId === 'custom'
-    ? {
-        id: 'custom',
-        label: 'Custom',
-        widthMm: customTemplateMm.widthMm,
-        heightMm: customTemplateMm.heightMm,
-        printWidthPx: Math.round((customTemplateMm.widthMm / 25.4) * DpiProfile.Print300),
-        printHeightPx: Math.round((customTemplateMm.heightMm / 25.4) * DpiProfile.Print300),
-        countries: 'Custom'
-      }
-    : baseTemplate;
+  const template = TemplateRegistry.getTemplate(templateId, customTemplateMm);
 
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState<number>(IMAGE_ADJUSTMENT_DEFAULTS.zoom);

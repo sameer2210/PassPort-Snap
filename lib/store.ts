@@ -5,8 +5,18 @@ import type { BackgroundChoice, Person } from './types';
 import type { BackgroundStatus } from './background/backgroundTypes';
 import { templates } from './config';
 import { PRINT_DEFAULTS } from './constants/printDefaults';
+import { EDITOR_DEFAULTS } from './constants/editorDefaults';
+import { backgroundCache } from './background/backgroundCache';
 
-import { cleanupSessions, registerSessionUpdate } from './storage';
+import { cleanupSessions, registerSessionUpdate, clearPassportWorkspace } from './storage';
+
+// Safe UUID generation for session IDs
+const generateSessionId = (): string => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return Math.random().toString(36).substring(2) + Date.now().toString();
+};
 
 // Custom storage for Zustand using idb-keyval (IndexedDB)
 const idbStorage: StateStorage = {
@@ -76,28 +86,34 @@ interface AppState {
   setActivePersonId: (id: string) => void;
   reorderPeople: (newOrder: Person[]) => void;
   resetStore: () => void;
+  resetEditor: () => void;
 }
 
-const initialState = {
+// Shared initializers to prevent duplicate reset logic
+const getInitialEditorState = () => ({
+  people: [] as Person[],
+  activePersonId: null as string | null,
+  sheetSizeId: PRINT_DEFAULTS.defaultSheetSizeId,
+  backgroundChoice: EDITOR_DEFAULTS.backgroundChoice,
+  customBackgroundColor: EDITOR_DEFAULTS.customBackgroundColor,
+  backgroundStatus: EDITOR_DEFAULTS.backgroundStatus,
+  backgroundError: EDITOR_DEFAULTS.backgroundError,
+  processing: EDITOR_DEFAULTS.processing,
+});
+
+const getInitialState = () => ({
   step: 1,
   templateId: templates[0].id,
-  backgroundChoice: 'original' as BackgroundChoice,
-  customBackgroundColor: '#ffffff',
-  people: [],
-  activePersonId: null,
-  sheetSizeId: PRINT_DEFAULTS.defaultSheetSizeId,
-  customTemplateMm: { widthMm: 35, heightMm: 45 },
-  backgroundStatus: 'idle' as BackgroundStatus,
+  customTemplateMm: { ...EDITOR_DEFAULTS.defaultCustomTemplateMm },
   modelLoaded: false,
-  processing: false,
-  backgroundError: null as string | null,
-};
+  ...getInitialEditorState(),
+});
 
 export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
-      ...initialState,
-      sessionId: Date.now().toString(),
+      ...getInitialState(),
+      sessionId: generateSessionId(),
 
       setStep: (step) => set({ step }),
       setTemplateId: (templateId) => set({ templateId }),
@@ -140,11 +156,34 @@ export const useAppStore = create<AppState>()(
         };
       }),
       
-      updatePerson: (id, updates) => set((state) => ({
-        people: state.people.map(p => p.id === id ? { ...p, ...updates } : p)
-      })),
+      updatePerson: (id, updates) => set((state) => {
+        const updatedPeople = state.people.map(p => {
+          if (p.id === id) {
+            // Revoke old highResPhotoUrl if it is being replaced/updated with a different value
+            if (updates.highResPhotoUrl !== undefined && p.highResPhotoUrl && p.highResPhotoUrl !== updates.highResPhotoUrl && p.highResPhotoUrl.startsWith('blob:')) {
+              URL.revokeObjectURL(p.highResPhotoUrl);
+            }
+            // Revoke old highResFinalUrl if it is being replaced/updated with a different value
+            if (updates.highResFinalUrl !== undefined && p.highResFinalUrl && p.highResFinalUrl !== updates.highResFinalUrl && p.highResFinalUrl.startsWith('blob:')) {
+              URL.revokeObjectURL(p.highResFinalUrl);
+            }
+            return { ...p, ...updates };
+          }
+          return p;
+        });
+        return { people: updatedPeople };
+      }),
 
       removePerson: (id) => set((state) => {
+        const person = state.people.find(p => p.id === id);
+        if (person) {
+          if (person.highResPhotoUrl && person.highResPhotoUrl.startsWith('blob:')) {
+            URL.revokeObjectURL(person.highResPhotoUrl);
+          }
+          if (person.highResFinalUrl && person.highResFinalUrl.startsWith('blob:')) {
+            URL.revokeObjectURL(person.highResFinalUrl);
+          }
+        }
         const newPeople = state.people.filter(p => p.id !== id);
         return {
           people: newPeople,
@@ -155,16 +194,44 @@ export const useAppStore = create<AppState>()(
       setActivePersonId: (activePersonId) => set({ activePersonId }),
       reorderPeople: (people) => set({ people }),
       
-      resetStore: () => set({ ...initialState, sessionId: Date.now().toString() }),
+      resetStore: () => set({ ...getInitialState(), sessionId: generateSessionId() }),
+      resetEditor: () => {
+        set((state) => {
+          // 1. Revoke object URLs for all people
+          state.people.forEach((p) => {
+            if (p.highResPhotoUrl && p.highResPhotoUrl.startsWith('blob:')) {
+              URL.revokeObjectURL(p.highResPhotoUrl);
+            }
+            if (p.highResFinalUrl && p.highResFinalUrl.startsWith('blob:')) {
+              URL.revokeObjectURL(p.highResFinalUrl);
+            }
+          });
+
+          // 2. Clear session background cache
+          backgroundCache.clearAll();
+
+          // 3. Clear IndexedDB and browser storage selectively (leaves Zustand storage key intact)
+          clearPassportWorkspace();
+
+          // 4. Return reset states with Step 2 navigation
+          return {
+            ...getInitialEditorState(),
+            templateId: templates[0].id,
+            customTemplateMm: { ...EDITOR_DEFAULTS.defaultCustomTemplateMm },
+            step: 2,
+            sessionId: generateSessionId()
+          };
+        });
+      },
     }),
     {
       name: 'passport-snap-storage',
       storage: createJSONStorage(() => idbStorage),
       partialize: (state) => ({
         ...state,
-        backgroundStatus: 'idle' as BackgroundStatus,
-        processing: false,
-        backgroundError: null as string | null,
+        backgroundStatus: EDITOR_DEFAULTS.backgroundStatus,
+        processing: EDITOR_DEFAULTS.processing,
+        backgroundError: EDITOR_DEFAULTS.backgroundError,
         people: state.people.map(p => ({
           ...p,
           highResPhotoUrl: null,

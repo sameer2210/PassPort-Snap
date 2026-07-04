@@ -92,6 +92,21 @@ export class TemplateRegistry {
     return this.registry.get(id);
   }
 
+  static getTemplate(id: string, customDimensions?: { widthMm: number; heightMm: number }): PhotoTemplate {
+    if (id === 'custom' && customDimensions) {
+      return {
+        id: 'custom',
+        label: 'Custom Size',
+        widthMm: customDimensions.widthMm,
+        heightMm: customDimensions.heightMm,
+        printWidthPx: Math.round((customDimensions.widthMm / 25.4) * 300),
+        printHeightPx: Math.round((customDimensions.heightMm / 25.4) * 300),
+        countries: 'Custom'
+      };
+    }
+    return this.registry.get(id) || Array.from(this.registry.values())[0];
+  }
+
   static getAll(): readonly PhotoTemplate[] {
     return Array.from(this.registry.values());
   }

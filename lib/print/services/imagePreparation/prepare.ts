@@ -37,36 +37,40 @@ export async function prepareImage(
 
   // Create isolated canvas
   const canvas = new BrowserCanvas(targetW, targetH);
-  const ctx = canvas.getContext2D();
-  if (!ctx) {
-    throw new Error('Failed to obtain canvas drawing context.');
+  try {
+    const ctx = canvas.getContext2D();
+    if (!ctx) {
+      throw new Error('Failed to obtain canvas drawing context.');
+    }
+
+    // 1. Background Fill
+    applyBackground(ctx, targetW, targetH, adjustments.backgroundColor || '#ffffff');
+
+    // 2. Adjustments Canvas (isolated temporary context for cropping and rotation)
+    // For rotation & crop, we evaluate crop first, then draw rotated
+    ctx.translate(targetW / 2, targetH / 2);
+    applyRotation(ctx, adjustments.rotation, 0, 0);
+    ctx.translate(-targetW / 2, -targetH / 2);
+
+    // 3. Apply Filters
+    applyFilters(ctx, adjustments.brightness, adjustments.contrast);
+
+    // 4. Crop or normal resize drawing
+    if (adjustments.cropArea) {
+      applyCrop(ctx, img, adjustments.cropArea, targetW, targetH);
+    } else {
+      applyResize(ctx, img, targetW, targetH);
+    }
+
+    // Clear filters to avoid canvas state leakage
+    clearFilters(ctx);
+
+    // 5. Sharpen Filter
+    applySharpen(ctx, targetW, targetH, adjustments.sharpenAmount ?? 0.15);
+
+    // 6. Output prepared sRGB image
+    return canvas.toDataURL('image/jpeg', settings.jpegQuality);
+  } finally {
+    canvas.destroy();
   }
-
-  // 1. Background Fill
-  applyBackground(ctx, targetW, targetH, adjustments.backgroundColor || '#ffffff');
-
-  // 2. Adjustments Canvas (isolated temporary context for cropping and rotation)
-  // For rotation & crop, we evaluate crop first, then draw rotated
-  ctx.translate(targetW / 2, targetH / 2);
-  applyRotation(ctx, adjustments.rotation, 0, 0);
-  ctx.translate(-targetW / 2, -targetH / 2);
-
-  // 3. Apply Filters
-  applyFilters(ctx, adjustments.brightness, adjustments.contrast);
-
-  // 4. Crop or normal resize drawing
-  if (adjustments.cropArea) {
-    applyCrop(ctx, img, adjustments.cropArea, targetW, targetH);
-  } else {
-    applyResize(ctx, img, targetW, targetH);
-  }
-
-  // Clear filters to avoid canvas state leakage
-  clearFilters(ctx);
-
-  // 5. Sharpen Filter
-  applySharpen(ctx, targetW, targetH, adjustments.sharpenAmount ?? 0.15);
-
-  // 6. Output prepared sRGB image
-  return canvas.toDataURL('image/jpeg', settings.jpegQuality);
 }

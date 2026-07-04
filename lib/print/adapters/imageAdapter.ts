@@ -13,8 +13,18 @@ export const ImageAdapter: IImageLoader = {
       if (src.startsWith('http') && !src.includes('localhost') && !src.includes('127.0.0.1')) {
         img.crossOrigin = 'anonymous';
       }
-      img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error('Failed to load image resource: ' + src));
+      const handleLoad = () => {
+        img.onload = null;
+        img.onerror = null;
+        resolve(img);
+      };
+      const handleError = () => {
+        img.onload = null;
+        img.onerror = null;
+        reject(new Error('Failed to load image resource: ' + src));
+      };
+      img.onload = handleLoad;
+      img.onerror = handleError;
       img.src = src;
     });
   }

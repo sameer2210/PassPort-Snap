@@ -1,10 +1,9 @@
-import { IMAGE_ADJUSTMENT_DEFAULTS } from '@/hooks/imageAdjustmentDefaults';
+import { IMAGE_ADJUSTMENT_DEFAULTS } from '@/lib/constants/editorDefaults';
 import { backgroundCache } from '@/lib/background/backgroundCache';
 import { compositeColorBase64, compositeColorBlobUrl } from '@/lib/background/backgroundCanvas';
 import { rmbgEngine } from '@/lib/background/backgroundService';
-import { templates } from '@/lib/config';
 import { getCroppedImg } from '@/lib/cropImage';
-import { DpiProfile } from '@/lib/print';
+import { TemplateRegistry } from '@/lib/print/registry/templateRegistry';
 import { useAppStore } from '@/lib/store';
 import { useCallback, useRef } from 'react';
 
@@ -91,13 +90,9 @@ export function useBackgroundRemoval() {
       if (!cachedItem?.previewBlob) throw new Error('Preview cache entry missing');
 
       // Create composite canvas and output base64
-      const baseTemplate = templates.find(t => t.id === storeState.templateId) || templates[0];
-      const targetW = storeState.templateId === 'custom'
-        ? Math.round((storeState.customTemplateMm.widthMm / 25.4) * DpiProfile.Print300)
-        : baseTemplate.printWidthPx;
-      const targetH = storeState.templateId === 'custom'
-        ? Math.round((storeState.customTemplateMm.heightMm / 25.4) * DpiProfile.Print300)
-        : baseTemplate.printHeightPx;
+      const template = TemplateRegistry.getTemplate(storeState.templateId, storeState.customTemplateMm);
+      const targetW = template.printWidthPx;
+      const targetH = template.printHeightPx;
 
       const finalBase64 = await compositeColorBase64(cachedItem.previewBlob, color, targetW, targetH);
 
@@ -143,13 +138,9 @@ export function useBackgroundRemoval() {
     // Get color Hex
     const color = colorOption === 'white' ? '#ffffff' : colorOption === 'blue' ? '#e0f2fe' : customColorHex;
 
-    const baseTemplate = templates.find(t => t.id === storeState.templateId) || templates[0];
-    const targetW = storeState.templateId === 'custom'
-      ? Math.round((storeState.customTemplateMm.widthMm / 25.4) * DpiProfile.Print300)
-      : baseTemplate.printWidthPx;
-    const targetH = storeState.templateId === 'custom'
-      ? Math.round((storeState.customTemplateMm.heightMm / 25.4) * DpiProfile.Print300)
-      : baseTemplate.printHeightPx;
+    const template = TemplateRegistry.getTemplate(storeState.templateId, storeState.customTemplateMm);
+    const targetW = template.printWidthPx;
+    const targetH = template.printHeightPx;
 
     // 1. Original choice -> skip background removal, crop only
     if (colorOption === 'original') {

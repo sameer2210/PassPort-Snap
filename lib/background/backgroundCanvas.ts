@@ -5,15 +5,25 @@ export async function blobToImageBitmap(blob: Blob): Promise<ImageBitmap | HTMLI
   return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(blob);
-    img.src = url;
-    img.onload = () => {
-      URL.revokeObjectURL(url);
+    const handleLoad = () => {
+      img.onload = null;
+      img.onerror = null;
+      if (url.startsWith('blob:')) {
+        URL.revokeObjectURL(url);
+      }
       resolve(img);
     };
-    img.onerror = (err) => {
-      URL.revokeObjectURL(url);
+    const handleError = (err: unknown) => {
+      img.onload = null;
+      img.onerror = null;
+      if (url.startsWith('blob:')) {
+        URL.revokeObjectURL(url);
+      }
       reject(err);
     };
+    img.onload = handleLoad;
+    img.onerror = handleError;
+    img.src = url;
   });
 }
 
@@ -81,16 +91,23 @@ export async function compositeColorBase64(
   height: number
 ): Promise<string> {
   const imageBitmap = await blobToImageBitmap(cutoutBlob);
-  const canvas = await composeBackground(imageBitmap, color, width, height);
-  
-  // Close imageBitmap to release memory immediately
-  if ('close' in imageBitmap && typeof imageBitmap.close === 'function') {
-    imageBitmap.close();
+  try {
+    const canvas = await composeBackground(imageBitmap, color, width, height);
+    try {
+      const isTransparent = color === 'transparent' || color === 'original';
+      const outBlob = await canvasToBlob(canvas, isTransparent ? 'image/png' : 'image/jpeg', 0.95);
+      return await blobToDataUrl(outBlob);
+    } finally {
+      // Explicitly resize canvas to release GPU memory buffer allocations immediately
+      canvas.width = 0;
+      canvas.height = 0;
+    }
+  } finally {
+    // Close imageBitmap to release memory immediately
+    if ('close' in imageBitmap && typeof imageBitmap.close === 'function') {
+      imageBitmap.close();
+    }
   }
-
-  const isTransparent = color === 'transparent' || color === 'original';
-  const outBlob = await canvasToBlob(canvas, isTransparent ? 'image/png' : 'image/jpeg', 0.95);
-  return await blobToDataUrl(outBlob);
 }
 
 export async function compositeColorBlobUrl(
@@ -100,14 +117,21 @@ export async function compositeColorBlobUrl(
   height: number
 ): Promise<string> {
   const imageBitmap = await blobToImageBitmap(cutoutBlob);
-  const canvas = await composeBackground(imageBitmap, color, width, height);
-
-  // Close imageBitmap to release memory immediately
-  if ('close' in imageBitmap && typeof imageBitmap.close === 'function') {
-    imageBitmap.close();
+  try {
+    const canvas = await composeBackground(imageBitmap, color, width, height);
+    try {
+      const isTransparent = color === 'transparent' || color === 'original';
+      const outBlob = await canvasToBlob(canvas, isTransparent ? 'image/png' : 'image/jpeg', 0.95);
+      return URL.createObjectURL(outBlob);
+    } finally {
+      // Explicitly resize canvas to release GPU memory buffer allocations immediately
+      canvas.width = 0;
+      canvas.height = 0;
+    }
+  } finally {
+    // Close imageBitmap to release memory immediately
+    if ('close' in imageBitmap && typeof imageBitmap.close === 'function') {
+      imageBitmap.close();
+    }
   }
-
-  const isTransparent = color === 'transparent' || color === 'original';
-  const outBlob = await canvasToBlob(canvas, isTransparent ? 'image/png' : 'image/jpeg', 0.95);
-  return URL.createObjectURL(outBlob);
 }

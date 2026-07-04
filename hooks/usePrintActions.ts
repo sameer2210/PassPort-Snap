@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import type { Dispatch, SetStateAction } from 'react';
 import {
   PaperSize,
   PhotoTemplate,
@@ -18,7 +17,6 @@ export interface UsePrintActionsInput {
   readonly template: PhotoTemplate;
   readonly layout: LayoutResult | null;
   readonly slots: readonly (string | null)[];
-  readonly setSlots: Dispatch<SetStateAction<Array<string | null>>>;
   readonly people: readonly Person[];
   readonly selectedPersonId: string | null;
   readonly showCutlines: boolean;
@@ -39,7 +37,6 @@ export function usePrintActions({
   template,
   layout,
   slots,
-  setSlots,
   people,
   selectedPersonId,
   showCutlines,
@@ -49,42 +46,37 @@ export function usePrintActions({
 
   const handleSlotClick = useCallback(
     (index: number) => {
-      const newSlots = [...slots];
-      if (newSlots[index]) {
-        newSlots[index] = null;
-      } else if (selectedPersonId) {
-        newSlots[index] = selectedPersonId;
-      }
-      setSlots(newSlots);
-
-      // Sync counts back
-      people.forEach((p) => {
-        const count = newSlots.filter((s) => s === p.id).length;
-        if (p.count !== count) {
-          updatePerson(p.id, { count });
+      const clickedPersonId = slots[index];
+      if (clickedPersonId) {
+        const p = people.find((x) => x.id === clickedPersonId);
+        if (p) {
+          updatePerson(p.id, { count: Math.max(0, p.count - 1) });
         }
-      });
+      } else if (selectedPersonId) {
+        const p = people.find((x) => x.id === selectedPersonId);
+        if (p) {
+          const currentTotalCount = people.reduce((acc, x) => acc + x.count, 0);
+          if (currentTotalCount < (layout?.capacity || 0)) {
+            updatePerson(p.id, { count: p.count + 1 });
+          }
+        }
+      }
     },
-    [slots, selectedPersonId, people, updatePerson, setSlots]
+    [slots, selectedPersonId, people, updatePerson, layout]
   );
 
   const handleAutoFill = useCallback(() => {
     if (!selectedPersonId) return;
-    const newSlots = [...slots];
-    for (let i = 0; i < newSlots.length; i++) {
-      if (!newSlots[i]) {
-        newSlots[i] = selectedPersonId;
+    const currentTotalCount = people.reduce((acc, x) => acc + x.count, 0);
+    const maxCapacity = layout?.capacity || 0;
+    const remainingSpace = Math.max(0, maxCapacity - currentTotalCount);
+    if (remainingSpace > 0) {
+      const p = people.find((x) => x.id === selectedPersonId);
+      if (p) {
+        updatePerson(p.id, { count: p.count + remainingSpace });
       }
     }
-    setSlots(newSlots);
-
-    people.forEach((p) => {
-      const count = newSlots.filter((s) => s === p.id).length;
-      if (p.count !== count) {
-        updatePerson(p.id, { count });
-      }
-    });
-  }, [selectedPersonId, slots, people, updatePerson, setSlots]);
+  }, [selectedPersonId, people, updatePerson, layout]);
 
   const handleDownloadPdf = useCallback(async () => {
     setIsGenerating(true);

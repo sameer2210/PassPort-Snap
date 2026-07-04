@@ -16,8 +16,18 @@ export async function processUploadedFile(file: File): Promise<{
   const img = new Image();
   img.src = highResPhotoUrl;
   await new Promise<void>((resolve, reject) => {
-    img.onload = () => resolve();
-    img.onerror = () => reject(new Error('Failed to load image file.'));
+    const handleLoad = () => {
+      img.onload = null;
+      img.onerror = null;
+      resolve();
+    };
+    const handleError = () => {
+      img.onload = null;
+      img.onerror = null;
+      reject(new Error('Failed to load image file.'));
+    };
+    img.onload = handleLoad;
+    img.onerror = handleError;
   });
 
   // 3. Calculate new dimensions (max 2000px)
@@ -36,13 +46,17 @@ export async function processUploadedFile(file: File): Promise<{
 
   // 4. Draw to canvas and export as compressed JPEG Data URL
   const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d');
-  if (ctx) {
-    ctx.drawImage(img, 0, 0, width, height);
+  try {
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.drawImage(img, 0, 0, width, height);
+    }
+    const previewPhotoUrl = canvas.toDataURL('image/jpeg', 0.8);
+    return { highResPhotoUrl, previewPhotoUrl };
+  } finally {
+    canvas.width = 0;
+    canvas.height = 0;
   }
-  const previewPhotoUrl = canvas.toDataURL('image/jpeg', 0.8);
-
-  return { highResPhotoUrl, previewPhotoUrl };
 }

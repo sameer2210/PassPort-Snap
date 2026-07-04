@@ -4,6 +4,7 @@ export interface ICanvas {
   getContext2D(): ICanvasContext | null;
   toDataURL(mimeType: string, quality?: number): string;
   toBlob(callback: (blob: Blob | null) => void, mimeType: string, quality?: number): void;
+  destroy(): void;
 }
 
 export interface ICanvasContext {
@@ -46,6 +47,13 @@ export class BrowserCanvas implements ICanvas {
 
   toBlob(callback: (blob: Blob | null) => void, mimeType: string, quality?: number): void {
     this.canvas.toBlob(callback, mimeType, quality);
+  }
+
+  destroy(): void {
+    if (this.canvas) {
+      this.canvas.width = 0;
+      this.canvas.height = 0;
+    }
   }
 }
 

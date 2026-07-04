@@ -35,17 +35,23 @@ export class ImglyRmbgEngine implements BackgroundEngine {
     let blobInput: Blob;
     if (source instanceof ImageBitmap) {
       const canvas = document.createElement('canvas');
-      canvas.width = source.width;
-      canvas.height = source.height;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) throw new Error('Canvas 2D context creation failed in remove background');
-      ctx.drawImage(source, 0, 0);
-      blobInput = await new Promise<Blob>((resolve, reject) => {
-        canvas.toBlob((blob) => {
-          if (blob) resolve(blob);
-          else reject(new Error('Canvas to Blob failed'));
-        }, 'image/png');
-      });
+      try {
+        canvas.width = source.width;
+        canvas.height = source.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('Canvas 2D context creation failed in remove background');
+        ctx.drawImage(source, 0, 0);
+        blobInput = await new Promise<Blob>((resolve, reject) => {
+          canvas.toBlob((blob) => {
+            if (blob) resolve(blob);
+            else reject(new Error('Canvas to Blob failed'));
+          }, 'image/png');
+        });
+      } finally {
+        // Explicitly resize canvas to release GPU memory buffer allocations immediately
+        canvas.width = 0;
+        canvas.height = 0;
+      }
     } else {
       blobInput = source;
     }

@@ -5,10 +5,18 @@ class BackgroundCache {
   private cache = new Map<string, CachedBackground>();
   private intervalId: NodeJS.Timeout | null = null;
 
-  constructor() {
-    // Start automated pruning interval
-    if (typeof window !== 'undefined') {
+  constructor() {}
+
+  private startTimerIfNeeded() {
+    if (typeof window !== 'undefined' && !this.intervalId) {
       this.intervalId = setInterval(() => this.pruneExpired(), 60000); // Check every minute
+    }
+  }
+
+  private stopTimerIfEmpty() {
+    if (this.cache.size === 0 && this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
     }
   }
 
@@ -24,7 +32,7 @@ class BackgroundCache {
     const existing = this.cache.get(personId) || { createdAt: Date.now(), lastAccessed: Date.now() };
     
     // Revoke old URL if it exists
-    if (existing.previewObjectUrl) {
+    if (existing.previewObjectUrl && existing.previewObjectUrl.startsWith('blob:')) {
       URL.revokeObjectURL(existing.previewObjectUrl);
     }
 
@@ -33,13 +41,14 @@ class BackgroundCache {
     existing.lastAccessed = Date.now();
 
     this.cache.set(personId, existing);
+    this.startTimerIfNeeded();
   }
 
   public setHighRes(personId: string, blob: Blob) {
     const existing = this.cache.get(personId) || { createdAt: Date.now(), lastAccessed: Date.now() };
     
     // Revoke old URL if it exists
-    if (existing.highResObjectUrl) {
+    if (existing.highResObjectUrl && existing.highResObjectUrl.startsWith('blob:')) {
       URL.revokeObjectURL(existing.highResObjectUrl);
     }
 
@@ -48,39 +57,44 @@ class BackgroundCache {
     existing.lastAccessed = Date.now();
 
     this.cache.set(personId, existing);
+    this.startTimerIfNeeded();
   }
 
   public revoke(personId: string) {
     const item = this.cache.get(personId);
     if (item) {
-      if (item.previewObjectUrl) URL.revokeObjectURL(item.previewObjectUrl);
-      if (item.highResObjectUrl) URL.revokeObjectURL(item.highResObjectUrl);
+      if (item.previewObjectUrl && item.previewObjectUrl.startsWith('blob:')) URL.revokeObjectURL(item.previewObjectUrl);
+      if (item.highResObjectUrl && item.highResObjectUrl.startsWith('blob:')) URL.revokeObjectURL(item.highResObjectUrl);
       this.cache.delete(personId);
+      this.stopTimerIfEmpty();
     }
   }
 
   public clearAll() {
     this.cache.forEach((item) => {
-      if (item.previewObjectUrl) URL.revokeObjectURL(item.previewObjectUrl);
-      if (item.highResObjectUrl) URL.revokeObjectURL(item.highResObjectUrl);
+      if (item.previewObjectUrl && item.previewObjectUrl.startsWith('blob:')) URL.revokeObjectURL(item.previewObjectUrl);
+      if (item.highResObjectUrl && item.highResObjectUrl.startsWith('blob:')) URL.revokeObjectURL(item.highResObjectUrl);
     });
     this.cache.clear();
+    this.stopTimerIfEmpty();
   }
 
   private pruneExpired() {
     const now = Date.now();
     this.cache.forEach((item, personId) => {
       if (now - item.lastAccessed > BACKGROUND_CONSTANTS.CACHE_TIMEOUT_MS) {
-        if (item.previewObjectUrl) URL.revokeObjectURL(item.previewObjectUrl);
-        if (item.highResObjectUrl) URL.revokeObjectURL(item.highResObjectUrl);
+        if (item.previewObjectUrl && item.previewObjectUrl.startsWith('blob:')) URL.revokeObjectURL(item.previewObjectUrl);
+        if (item.highResObjectUrl && item.highResObjectUrl.startsWith('blob:')) URL.revokeObjectURL(item.highResObjectUrl);
         this.cache.delete(personId);
       }
     });
+    this.stopTimerIfEmpty();
   }
 
   public destroy() {
     if (this.intervalId) {
       clearInterval(this.intervalId);
+      this.intervalId = null;
     }
     this.clearAll();
   }

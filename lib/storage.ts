@@ -126,3 +126,23 @@ export async function cleanupSessions() {
 
   await saveSessionIndex(remaining);
 }
+
+export async function clearPassportWorkspace(): Promise<void> {
+  try {
+    const index = await getSessionIndex();
+    for (const item of index) {
+      await del(`${SESSION_PREFIX}${item.id}`);
+    }
+    await del(INDEX_KEY);
+
+    if (typeof window !== 'undefined') {
+      const keysToClear = ['passport-snap-template'];
+      keysToClear.forEach((key) => {
+        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
+      });
+    }
+  } catch (err) {
+    console.error('Failed to clear passport workspace storage:', err);
+  }
+}

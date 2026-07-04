@@ -17,9 +17,14 @@ function convolve(
     output = new ImageData(sw, sh);
   } else {
     const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return imageData;
-    output = ctx.createImageData(sw, sh);
+    try {
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return imageData;
+      output = ctx.createImageData(sw, sh);
+    } finally {
+      canvas.width = 0;
+      canvas.height = 0;
+    }
   }
   const dst = output.data;
 

@@ -101,7 +101,12 @@ export const PrintController = {
   exportImage: async (scene: RenderScene, format: 'image/jpeg' | 'image/png'): Promise<Blob> => {
     const strategy = new SinglePhotoStrategy();
     const canvas = await strategy.generateCanvas(scene);
-    return ExportService.canvasToBlob(canvas, format);
+    try {
+      return await ExportService.canvasToBlob(canvas, format);
+    } finally {
+      canvas.width = 0;
+      canvas.height = 0;
+    }
   }
 } as const;
 // Note: React uses this controller by reading Zustand state and calling these pure methods.

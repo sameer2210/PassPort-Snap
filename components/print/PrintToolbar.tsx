@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { SettingsRow } from '@/components/ui/SettingsRow';
 import { ActionGroup } from '@/components/ui/ActionGroup';
-import { Plus, Settings2, Sparkles, RotateCcw } from 'lucide-react';
+import { Plus, Settings2, Sparkles, RotateCcw, Trash2 } from 'lucide-react';
 import type { ToolbarState, ToolbarActions } from './types';
 
 export interface PrintToolbarProps {
@@ -19,7 +19,7 @@ export const PrintToolbar: React.FC<PrintToolbarProps> = React.memo(({ state, ac
     onAutoFill,
     onAddPhoto,
     onReset,
-    onNewImage,
+    onClearWorkspace,
   } = actions;
 
   return (
@@ -34,7 +34,7 @@ export const PrintToolbar: React.FC<PrintToolbarProps> = React.memo(({ state, ac
             className="border border-[#0b1e3a]/8"
           >
             <ActionGroup className="w-full">
-              <Button 
+              <Button
                 className="w-full bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold h-9 rounded-lg flex items-center justify-center gap-1.5 transition-all duration-120"
                 onClick={onAutoFill}
               >
@@ -89,17 +89,17 @@ export const PrintToolbar: React.FC<PrintToolbarProps> = React.memo(({ state, ac
 
       {/* Footer Controls */}
       <ActionGroup className="w-full" equalWidth={true}>
-        <Button 
-          variant="outline" 
-          className="h-9 text-xs font-semibold border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg transition-all duration-120 cursor-pointer" 
+        <Button
+          variant="outline"
+          className="h-9 text-xs font-semibold border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg transition-all duration-120 cursor-pointer"
           onClick={onAddPhoto}
         >
           <Plus className="w-3.5 h-3.5 mr-1" />
           Add Another Photo
         </Button>
-        <Button 
-          variant="outline" 
-          className="h-9 text-xs font-semibold border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg transition-all duration-120 cursor-pointer" 
+        <Button
+          variant="outline"
+          className="h-9 text-xs font-semibold border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg transition-all duration-120 cursor-pointer"
           onClick={onReset}
         >
           <RotateCcw className="w-3.5 h-3.5 mr-1" />
@@ -108,10 +108,10 @@ export const PrintToolbar: React.FC<PrintToolbarProps> = React.memo(({ state, ac
         <Button
           variant="outline"
           className="h-9 text-xs font-semibold border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg transition-all duration-120 cursor-pointer"
-          onClick={onNewImage}
+          onClick={onClearWorkspace}
         >
-          <Plus className="w-3.5 h-3.5 mr-1" />
-          New Image
+          <Trash2 className="w-3.5 h-3.5 mr-1" />
+          Clear Workspace
         </Button>
       </ActionGroup>
     </div>

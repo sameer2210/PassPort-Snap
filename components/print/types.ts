@@ -14,7 +14,7 @@ export interface ToolbarActions {
   readonly onAutoFill: () => void;
   readonly onAddPhoto: () => void;
   readonly onReset: () => void;
-  readonly onNewImage: () => void;
+  readonly onClearWorkspace: () => void;
 }
 
 export interface ExportState {
