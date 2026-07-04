@@ -25,28 +25,25 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       "flex flex-col items-center justify-center text-center p-8 max-w-md mx-auto space-y-5 select-none",
       className
     )}>
-      {/* Icon or Illustration Banner */}
       {illustration ? (
         <div className="flex-shrink-0 mb-2">{illustration}</div>
       ) : icon ? (
-        <div className="w-12 h-12 rounded-full bg-brand-light text-brand-primary flex items-center justify-center mx-auto mb-2">
+        <div className="w-12 h-12 rounded-full bg-brand-light/70 text-brand-primary flex items-center justify-center mx-auto mb-2 shadow-inner shadow-blue-500/5">
           {icon}
         </div>
       ) : null}
 
-      {/* Messaging */}
       <div className="space-y-1.5">
-        <h3 className="text-sm font-semibold text-gray-900 tracking-tight">
+        <h3 className="text-sm font-semibold text-app-text-primary tracking-tight">
           {title}
         </h3>
         {description && (
-          <p className="text-xs text-gray-500 max-w-[280px] mx-auto leading-normal">
+          <p className="text-xs text-app-text-secondary max-w-[280px] mx-auto leading-relaxed">
             {description}
           </p>
         )}
       </div>
 
-      {/* Primary/Secondary CTA Buttons */}
       {(action || secondaryAction) && (
         <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-2 w-full">
           {secondaryAction && <div className="w-full sm:w-auto">{secondaryAction}</div>}
@@ -59,3 +56,4 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 
 EmptyState.displayName = 'EmptyState';
 export default EmptyState;
+

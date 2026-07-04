@@ -22,7 +22,7 @@ export const WizardNavigation: React.FC = () => {
   return (
     <>
       {/* Mobile Horizontal Navigation Header */}
-      <div className="block lg:hidden w-full bg-white border border-[#0b1e3a]/6 rounded-2xl p-4 shadow-sm mb-2 select-none">
+      <div className="block lg:hidden w-full bg-white border border-app-border rounded-2xl p-4 shadow-sm mb-2 select-none">
         <div className="flex items-center justify-between overflow-x-auto gap-4 py-1 scrollbar-none select-none">
           {WIZARD_STEPS.map((s) => {
             const isActive = step === s.step;
@@ -32,12 +32,13 @@ export const WizardNavigation: React.FC = () => {
               <button
                 key={s.step}
                 disabled={!canClick}
+                aria-current={isActive ? 'step' : undefined}
                 onClick={() => canClick && handleStepClick(s.step)}
                 className={cn(
                   "text-xs font-semibold pb-1 border-b-2 transition-all duration-150 flex-shrink-0",
                   isActive 
                     ? "border-brand-primary text-brand-primary font-bold" 
-                    : "border-transparent text-gray-400 hover:text-gray-600",
+                    : "border-transparent text-app-text-muted hover:text-app-text-secondary",
                   !canClick && "opacity-40"
                 )}
               >
@@ -53,3 +54,4 @@ export const WizardNavigation: React.FC = () => {
 
 WizardNavigation.displayName = 'WizardNavigation';
 export default WizardNavigation;
+

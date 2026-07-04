@@ -117,13 +117,33 @@ export const useAppStore = create<AppState>()(
 
       setStep: (step) => set({ step }),
       setTemplateId: (templateId) => set({ templateId }),
-      setBackgroundChoice: (backgroundChoice) => set({ backgroundChoice }),
+      setBackgroundChoice: (backgroundChoice) => set((state) => {
+        if (state.activePersonId) {
+          const updatedPeople = state.people.map(p => {
+            if (p.id === state.activePersonId) {
+              return { ...p, backgroundChoice };
+            }
+            return p;
+          });
+          return { backgroundChoice, people: updatedPeople };
+        }
+        return { backgroundChoice };
+      }),
       setCustomBackgroundColor: (customBackgroundColor) => set({ customBackgroundColor }),
       setSheetSizeId: (sheetSizeId) => set({ sheetSizeId }),
       setCustomTemplateMm: (customTemplateMm) => set({ customTemplateMm }),
 
       setBackgroundStatus: (backgroundStatus) => set((state) => {
         if (state.backgroundStatus === backgroundStatus) return {};
+        if (state.activePersonId) {
+          const updatedPeople = state.people.map(p => {
+            if (p.id === state.activePersonId) {
+              return { ...p, backgroundStatus };
+            }
+            return p;
+          });
+          return { backgroundStatus, people: updatedPeople };
+        }
         return { backgroundStatus };
       }),
       setModelLoaded: (modelLoaded) => set((state) => {
@@ -132,10 +152,28 @@ export const useAppStore = create<AppState>()(
       }),
       setProcessing: (processing) => set((state) => {
         if (state.processing === processing) return {};
+        if (state.activePersonId) {
+          const updatedPeople = state.people.map(p => {
+            if (p.id === state.activePersonId) {
+              return { ...p, processing };
+            }
+            return p;
+          });
+          return { processing, people: updatedPeople };
+        }
         return { processing };
       }),
       setBackgroundError: (backgroundError) => set((state) => {
         if (state.backgroundError === backgroundError) return {};
+        if (state.activePersonId) {
+          const updatedPeople = state.people.map(p => {
+            if (p.id === state.activePersonId) {
+              return { ...p, backgroundError };
+            }
+            return p;
+          });
+          return { backgroundError, people: updatedPeople };
+        }
         return { backgroundError };
       }),
 
@@ -148,11 +186,19 @@ export const useAppStore = create<AppState>()(
           finalPhotoUrl: null, 
           highResFinalUrl: null,
           backgroundPreviewUrl: null,
-          count: PRINT_DEFAULTS.defaultPhotoCount
+          count: PRINT_DEFAULTS.defaultPhotoCount,
+          backgroundChoice: 'original',
+          backgroundStatus: 'idle',
+          backgroundError: null,
+          processing: false,
         };
         return { 
           people: [...state.people, newPerson],
-          activePersonId: id
+          activePersonId: id,
+          backgroundChoice: 'original',
+          backgroundStatus: 'idle',
+          backgroundError: null,
+          processing: false,
         };
       }),
       
@@ -185,13 +231,32 @@ export const useAppStore = create<AppState>()(
           }
         }
         const newPeople = state.people.filter(p => p.id !== id);
+        const nextActiveId = state.activePersonId === id ? (newPeople[0]?.id || null) : state.activePersonId;
+        const nextActivePerson = newPeople.find(p => p.id === nextActiveId);
+
         return {
           people: newPeople,
-          activePersonId: state.activePersonId === id ? (newPeople[0]?.id || null) : state.activePersonId
+          activePersonId: nextActiveId,
+          backgroundChoice: nextActivePerson?.backgroundChoice || 'original',
+          backgroundStatus: nextActivePerson?.backgroundStatus || 'idle',
+          backgroundError: nextActivePerson ? (nextActivePerson.backgroundError !== undefined ? nextActivePerson.backgroundError : null) : null,
+          processing: nextActivePerson ? (nextActivePerson.processing !== undefined ? nextActivePerson.processing : false) : false
         };
       }),
 
-      setActivePersonId: (activePersonId) => set({ activePersonId }),
+      setActivePersonId: (activePersonId) => set((state) => {
+        const person = state.people.find(p => p.id === activePersonId);
+        if (person) {
+          return {
+            activePersonId,
+            backgroundChoice: person.backgroundChoice || 'original',
+            backgroundStatus: person.backgroundStatus || 'idle',
+            backgroundError: person.backgroundError !== undefined ? person.backgroundError : null,
+            processing: person.processing !== undefined ? person.processing : false
+          };
+        }
+        return { activePersonId };
+      }),
       reorderPeople: (people) => set({ people }),
       
       resetStore: () => set({ ...getInitialState(), sessionId: generateSessionId() }),

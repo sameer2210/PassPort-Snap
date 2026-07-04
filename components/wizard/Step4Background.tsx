@@ -94,8 +94,8 @@ export function Step4Background() {
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6 py-2">
       <div className="space-y-2 text-center md:text-left">
-        <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Normalise Background</h2>
-        <p className="text-sm text-gray-500 max-w-lg">
+        <h2 className="text-2xl font-bold text-app-text-primary tracking-tight">Normalise Background</h2>
+        <p className="text-sm text-app-text-secondary max-w-lg">
           Isolate the subject and apply a clean, compliant passport background. All processing runs locally inside your browser.
         </p>
       </div>
@@ -153,11 +153,13 @@ export function Step4Background() {
               {imgToUse ? (
                 <img
                   src={imgToUse}
-                  alt="Final Preview"
+                  alt="Composite passport photo output with background normalized"
                   className="max-h-full max-w-full object-contain rounded shadow-lg transition-transform duration-200"
+                  decoding="async"
+                  loading="eager"
                 />
               ) : (
-                <span className="text-xs font-medium text-gray-400">Loading composite...</span>
+                <span className="text-xs font-medium text-app-text-muted">Loading composite...</span>
               )}
             </div>
           </PreviewContainer>
@@ -169,7 +171,7 @@ export function Step4Background() {
             title="Background Preset"
             subtitle="Choose a passport compliant backdrop"
             icon={<Palette className="w-4 h-4 text-brand-primary" />}
-            className="border border-[#0b1e3a]/8 select-none"
+            className="border border-app-border select-none"
           >
             <div className="grid grid-cols-2 gap-3">
               {bgOptions.map((opt) => {
@@ -188,13 +190,13 @@ export function Step4Background() {
                     onClick={() => setBackgroundChoice(opt.id as BackgroundChoice)}
                     className={`flex flex-col items-center justify-between p-3.5 border rounded-xl cursor-pointer text-center group transition-all duration-150 focus:outline-none w-full
                       ${isSelected
-                        ? 'border-brand-primary bg-brand-light/10 ring-1 ring-brand-primary'
-                        : 'border-[#0b1e3a]/8 hover:border-brand-primary/45 hover:bg-gray-50/50'
+                        ? 'border-brand-primary bg-brand-light/15 ring-1 ring-brand-primary/70'
+                        : 'border-app-border hover:border-brand-primary/35 hover:bg-app-surface-muted/45'
                       }`}
                   >
                     {/* Tiny Color Dot preview inside card */}
                     <div
-                      className="w-8 h-8 rounded-full border border-gray-200 shadow-sm flex-shrink-0 flex items-center justify-center relative overflow-hidden"
+                      className="w-8 h-8 rounded-full border border-slate-200 shadow-sm flex-shrink-0 flex items-center justify-center relative overflow-hidden"
                       style={{ backgroundColor: isCustom ? customColor : buttonBgColor }}
                     >
                       {opt.id === 'original' && (
@@ -211,7 +213,7 @@ export function Step4Background() {
                       )}
                     </div>
 
-                    <span className="font-semibold text-[10px] text-gray-800 uppercase tracking-wider mt-3">
+                    <span className="font-semibold text-[10px] text-app-text-primary uppercase tracking-wider mt-3">
                       {opt.label}
                     </span>
                     {isCustom && isSelected && (
@@ -226,11 +228,11 @@ export function Step4Background() {
           </SectionCard>
 
           {/* Navigation Action Buttons */}
-          <div className="pt-2 border-t border-gray-100">
+          <div className="pt-2 border-t border-app-border">
             <ActionGroup className="w-full">
               <Button
                 variant="outline"
-                className="border-gray-200 hover:bg-gray-50 text-gray-700 h-9 px-4 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all duration-120"
+                className="border-slate-200 hover:bg-slate-50 text-app-text-secondary h-9 px-4 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all duration-120"
                 onClick={() => setStep(3)}
                 disabled={processing}
               >
@@ -253,3 +255,4 @@ export function Step4Background() {
   );
 }
 export default Step4Background;
+

@@ -19,7 +19,7 @@ export const PrintExportActions: React.FC<PrintExportActionsProps> = React.memo(
         <ActionGroup orientation="horizontal" responsiveStacking={false}>
           <Button
             variant="outline"
-            className="border-gray-200 hover:bg-gray-50 text-gray-700 h-8.5 px-3 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all duration-120"
+            className="border-slate-200 hover:bg-slate-50 text-app-text-secondary h-8.5 px-3 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all duration-120"
             onClick={onPrint}
             disabled={totalPhotosPlaced === 0}
           >
@@ -43,7 +43,7 @@ export const PrintExportActions: React.FC<PrintExportActionsProps> = React.memo(
         <ActionGroup orientation="horizontal" responsiveStacking={false}>
           <Button
             variant="outline"
-            className="border-gray-200 hover:bg-gray-50 text-gray-700 h-8.5 px-3 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all duration-120"
+            className="border-slate-200 hover:bg-slate-50 text-app-text-secondary h-8.5 px-3 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all duration-120"
             onClick={() => onDownloadSingle('image/jpeg')}
             disabled={isGenerating || !selectedPersonId}
           >
@@ -69,3 +69,4 @@ export const PrintExportActions: React.FC<PrintExportActionsProps> = React.memo(
 });
 
 PrintExportActions.displayName = 'PrintExportActions';
+

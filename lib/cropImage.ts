@@ -1,5 +1,5 @@
 import { IMAGE_ADJUSTMENT_DEFAULTS } from './constants/editorDefaults';
-import { applySharpness } from '../hooks/imageSharpness';
+import { applySharpness } from './print/services/imagePreparation/Sharpness';
 
 export const createImage = (url: string): Promise<HTMLImageElement> =>
   new Promise((resolve, reject) => {

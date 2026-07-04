@@ -6,9 +6,10 @@ import { SectionCard } from '@/components/ui/SectionCard';
 import { SettingsRow } from '@/components/ui/SettingsRow';
 import { Slider } from '@/components/ui/slider';
 import { IMAGE_ADJUSTMENT_DEFAULTS } from '@/lib/constants/editorDefaults';
-import { getCroppedImg } from '@/lib/cropImage';
+import { createImage, getCroppedImg } from '@/lib/cropImage';
 import { detectFace, initializeFaceDetector } from '@/lib/faceDetection';
 import { TemplateRegistry } from '@/lib/print/registry/templateRegistry';
+import { applySharpness } from '@/lib/print/services/imagePreparation/Sharpness';
 import { useAppStore } from '@/lib/store';
 import { ArrowLeft, ArrowRight, RotateCcw, RotateCw, Sliders, Sparkles } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -32,6 +33,66 @@ export function Step3Adjust() {
   const imgRef = useRef<HTMLImageElement>(null);
 
   const photoUrlToEdit = person?.previewPhotoUrl;
+
+  const [sharpenedUrl, setSharpenedUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!photoUrlToEdit) return;
+
+    if (sharpness === 50) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSharpenedUrl(null);
+      return;
+    }
+
+    let active = true;
+    let localBlobUrl: string | null = null;
+
+    const applyFilter = async () => {
+      try {
+        const image = await createImage(photoUrlToEdit);
+        if (!active) return;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = image.width;
+        canvas.height = image.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        ctx.drawImage(image, 0, 0);
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const sharpenedData = applySharpness(imgData, sharpness);
+        ctx.putImageData(sharpenedData, 0, 0);
+
+        canvas.toBlob((blob) => {
+          if (!active) return;
+          if (blob) {
+            localBlobUrl = URL.createObjectURL(blob);
+            setSharpenedUrl((prevUrl) => {
+              if (prevUrl && prevUrl.startsWith('blob:')) {
+                URL.revokeObjectURL(prevUrl);
+              }
+              return localBlobUrl;
+            });
+          }
+        }, 'image/jpeg', 0.95);
+      } catch (err) {
+        console.error('Failed to sharpen preview image:', err);
+      }
+    };
+
+    applyFilter();
+
+    return () => {
+      active = false;
+      setSharpenedUrl((prevUrl) => {
+        if (prevUrl && prevUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(prevUrl);
+        }
+        return null;
+      });
+    };
+  }, [photoUrlToEdit, sharpness]);
 
   useEffect(() => {
     initializeFaceDetector();
@@ -146,15 +207,17 @@ export function Step3Adjust() {
       <img
         ref={imgRef}
         src={photoUrlToEdit}
-        alt="Hidden source"
+        alt="Hidden face detection source image"
         className="hidden"
         crossOrigin="anonymous"
         onLoad={handleImageLoad}
+        decoding="async"
+        loading="eager"
       />
 
-      <div className="space-y-1.5 text-left pb-3 border-b border-gray-100">
-        <h2 className="text-xl font-bold text-gray-900 tracking-tight">Crop & Center</h2>
-        <p className="text-xs text-gray-500 leading-normal max-w-2xl">
+      <div className="space-y-1.5 text-left pb-3 border-b border-app-border">
+        <h2 className="text-xl font-bold text-app-text-primary tracking-tight">Crop & Center</h2>
+        <p className="text-xs text-app-text-secondary leading-normal max-w-2xl">
           Position your face in the center of the template box. The AI auto-detector will attempt to position it automatically.
         </p>
       </div>
@@ -165,20 +228,20 @@ export function Step3Adjust() {
           <PreviewContainer
             title="Preview"
             toolbar={
-              <span className="text-xs font-semibold text-gray-500 bg-gray-50 border border-gray-100 px-2 py-0.5 rounded select-none">
+              <span className="text-xs font-semibold text-app-text-secondary bg-slate-50 border border-app-border px-2 py-0.5 rounded select-none">
                 Portrait Preview • {template.widthMm} × {template.heightMm} mm
               </span>
             }
             loading={isProcessing}
             aspectRatio="aspect-[4/3]"
-            className="h-[690px] w-full shadow-md border border-gray-200 bg-[#F7FAFF]"
+            className="h-[690px] w-full shadow-md border border-slate-200 bg-app-background"
           >
             <div
               className="absolute inset-0 bg-neutral-950 overflow-hidden"
               style={{ filter: `brightness(${brightness}%) contrast(${contrast}%)` }}
             >
               <Cropper
-                image={photoUrlToEdit}
+                image={sharpenedUrl || photoUrlToEdit}
                 crop={crop}
                 zoom={zoom}
                 rotation={rotation}
@@ -198,7 +261,7 @@ export function Step3Adjust() {
             title="Adjustments"
             subtitle="Fine tune your portrait before background processing."
             icon={<Sliders className="w-4 h-4 text-brand-primary" />}
-            className="border border-[#0b1e3a]/8"
+            className="border border-app-border"
           >
             <div className="space-y-1">
               <SettingsRow
@@ -271,16 +334,16 @@ export function Step3Adjust() {
                 <ActionGroup equalWidth className="w-full">
                   <Button
                     variant="outline"
-                    className="h-10 text-xs font-semibold border-gray-200 hover:bg-gray-50 text-gray-700 flex items-center justify-center gap-1.5 rounded-xl transition-all duration-150"
+                    className="h-10 text-xs font-semibold border-slate-200 hover:bg-slate-50 text-app-text-secondary flex items-center justify-center gap-1.5 rounded-xl transition-all duration-150"
                     onClick={() => setRotation(r => (r + 90) % 360)}
                     title="Rotate 90 degrees"
                   >
-                    <RotateCw className="w-3.5 h-3.5 text-gray-500" />
+                    <RotateCw className="w-3.5 h-3.5 text-app-text-secondary" />
                     Rotate
                   </Button>
                   <Button
                     variant="outline"
-                    className="h-10 text-xs font-semibold border-gray-200 hover:bg-gray-50 text-gray-700 flex items-center justify-center gap-1.5 rounded-xl transition-all duration-150"
+                    className="h-10 text-xs font-semibold border-slate-200 hover:bg-slate-50 text-app-text-secondary flex items-center justify-center gap-1.5 rounded-xl transition-all duration-150"
                     onClick={handleAutoAdjust}
                     disabled={isProcessing}
                     title="AI Auto Align"
@@ -290,12 +353,12 @@ export function Step3Adjust() {
                   </Button>
                   <Button
                     variant="outline"
-                    className="h-10 text-xs font-semibold border-gray-200 hover:bg-gray-50 text-gray-700 flex items-center justify-center gap-1.5 rounded-xl transition-all duration-150"
+                    className="h-10 text-xs font-semibold border-slate-200 hover:bg-slate-50 text-app-text-secondary flex items-center justify-center gap-1.5 rounded-xl transition-all duration-150"
                     onClick={handleReset}
                     disabled={isProcessing}
                     title="Reset defaults"
                   >
-                    <RotateCcw className="w-3.5 h-3.5 text-gray-500" />
+                    <RotateCcw className="w-3.5 h-3.5 text-app-text-secondary" />
                     Reset Adjustments
                   </Button>
                 </ActionGroup>
@@ -304,11 +367,11 @@ export function Step3Adjust() {
           </SectionCard>
 
           {/* Navigation Action Buttons */}
-          <div className="pt-4 border-t border-gray-100 w-full">
+          <div className="pt-4 border-t border-app-border w-full">
             <ActionGroup className="w-full flex justify-between gap-4">
               <Button
                 variant="outline"
-                className="border-gray-200 hover:bg-gray-50 text-gray-700 h-10 px-5 text-sm font-semibold rounded-xl flex items-center gap-2 transition-all duration-150 shrink-0"
+                className="border-slate-200 hover:bg-slate-50 text-app-text-secondary h-10 px-5 text-sm font-semibold rounded-xl flex items-center gap-2 transition-all duration-150 shrink-0"
                 onClick={() => setStep(2)}
                 disabled={isProcessing}
               >
@@ -331,3 +394,4 @@ export function Step3Adjust() {
   );
 }
 export default Step3Adjust;
+

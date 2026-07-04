@@ -177,8 +177,8 @@ export function Step5PrintSheet() {
   return (
     <div className="w-full max-w-7xl mx-auto space-y-6 py-2">
       <div className="space-y-2 text-center md:text-left select-none">
-        <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Print Dashboard</h2>
-        <p className="text-sm text-gray-500 max-w-lg">
+        <h2 className="text-2xl font-bold text-app-text-primary tracking-tight">Print Dashboard</h2>
+        <p className="text-sm text-app-text-secondary max-w-lg">
           Configure sheet options, layout guidelines, and export as print-ready PDF or high quality
           PNG.
         </p>
@@ -202,14 +202,14 @@ export function Step5PrintSheet() {
         {/* Right Main Preview & Actions Workspace */}
         <div className="w-full lg:w-110 flex flex-col space-y-5">
           {/* Tab Selector inside custom premium container */}
-          <div className="bg-gray-100 p-1 rounded-xl flex items-center select-none">
+          <div className="bg-slate-100 p-1 rounded-xl flex items-center select-none">
             <button
               type="button"
               className={`flex-1 py-1.5 text-xs font-semibold rounded-lg text-center transition-all duration-150 focus:outline-none cursor-pointer
                 ${
                   !isSinglePhotoMode
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-800'
+                    ? 'bg-white text-app-text-primary shadow-sm'
+                    : 'text-app-text-secondary hover:text-app-text-primary'
                 }`}
               onClick={() => setIsSinglePhotoMode(false)}
             >
@@ -220,8 +220,8 @@ export function Step5PrintSheet() {
               className={`flex-1 py-1.5 text-xs font-semibold rounded-lg text-center transition-all duration-150 focus:outline-none cursor-pointer
                 ${
                   isSinglePhotoMode
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-800'
+                    ? 'bg-white text-app-text-primary shadow-sm'
+                    : 'text-app-text-secondary hover:text-app-text-primary'
                 }`}
               onClick={() => setIsSinglePhotoMode(true)}
             >
@@ -246,3 +246,4 @@ export function Step5PrintSheet() {
   );
 }
 export default Step5PrintSheet;
+

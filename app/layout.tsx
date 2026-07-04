@@ -1,9 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { publicEnv } from "@/lib/env";
-
-import type { Viewport } from "next";
+import { buildMetadata } from "@/lib/seo/metadata";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -11,20 +9,13 @@ const inter = Inter({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: publicEnv.NEXT_PUBLIC_APP_NAME,
-  description: "Offline-first passport photo editor and print dashboard.",
-  metadataBase: new URL(publicEnv.NEXT_PUBLIC_APP_URL),
-  manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: publicEnv.NEXT_PUBLIC_APP_NAME,
-  },
-};
+export const metadata: Metadata = buildMetadata();
 
 export const viewport: Viewport = {
   themeColor: "#ffffff",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({
@@ -41,3 +32,5 @@ export default function RootLayout({
     </html>
   );
 }
+
+

@@ -64,7 +64,7 @@ export const PrintPreviewCanvas: React.FC<PrintPreviewCanvasProps> = React.memo(
       {!isSinglePhotoMode ? (
         previewLayout && (
           <div
-            className="bg-white shadow-lg border border-[#0b1e3a]/6 relative transition-all duration-150 flex-shrink-0"
+            className="bg-white shadow-lg border border-app-border relative transition-all duration-150 flex-shrink-0"
             style={{
               width: `${paperWidthPx}px`,
               height: `${paperHeightPx}px`,
@@ -156,18 +156,24 @@ export const PrintPreviewCanvas: React.FC<PrintPreviewCanvasProps> = React.memo(
             const h = UnitConverter.convert(template.heightMm, 'mm', 'px', DpiProfile.Preview);
 
             return (
-              <div className="bg-white p-5 rounded-2xl shadow-md border border-[#0b1e3a]/6 flex flex-col items-center gap-4 select-none max-w-sm">
+              <div className="bg-white p-5 rounded-2xl shadow-md border border-app-border flex flex-col items-center gap-4 select-none max-w-sm">
                 <div
-                  className="border border-gray-150 shadow-inner bg-gray-50 flex items-center justify-center overflow-hidden rounded-xl"
+                  className="border border-slate-200 shadow-inner bg-slate-50 flex items-center justify-center overflow-hidden rounded-xl"
                   style={{
                     width: `${w * 3}px`,
                     height: `${h * 3}px`,
                   }}
                 >
-                  <img src={photoSrc} className="w-full h-full object-cover" alt="Single Place" />
+                  <img
+                    src={photoSrc}
+                    className="w-full h-full object-cover"
+                    alt={`Preview of passport photo aligned to template ${template.label}`}
+                    decoding="async"
+                    loading="eager"
+                  />
                 </div>
                 <div className="flex flex-col items-center space-y-1">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">Export size</span>
+                  <span className="text-[10px] font-bold text-app-text-muted uppercase tracking-widest leading-none">Export size</span>
                   <StatusBadge variant="info" icon={<ImageIcon className="w-3.5 h-3.5" />}>
                     {template.label} ({template.widthMm}x{template.heightMm}mm)
                   </StatusBadge>
@@ -183,3 +189,4 @@ export const PrintPreviewCanvas: React.FC<PrintPreviewCanvasProps> = React.memo(
 
 PrintPreviewCanvas.displayName = 'PrintPreviewCanvas';
 export default PrintPreviewCanvas;
+

@@ -28,35 +28,28 @@ export const SettingsRow: React.FC<SettingsRowProps> = ({
         "py-4 flex flex-col space-y-1.5 transition-opacity",
         {
           "opacity-50 pointer-events-none": disabled,
-          "border-b border-gray-100": divider,
+          "border-b border-app-border": divider,
         },
         className
       )}>
-        {/* Header: Label and Value */}
         <div className="flex items-center justify-between w-full">
-          <span className="text-sm font-semibold text-gray-900 tracking-tight">
+          <span className="text-sm font-semibold text-app-text-primary tracking-tight">
             {label}
           </span>
-          <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded min-w-10 text-center select-none">
+          <span className="text-xs font-bold text-brand-primary bg-brand-light/70 px-2 py-0.5 rounded-lg min-w-10 text-center select-none">
             {value}
           </span>
         </div>
-        
-        {/* Description */}
         {description && (
-          <p className="text-xs text-gray-500 leading-normal">
+          <p className="text-xs text-app-text-secondary leading-relaxed">
             {description}
           </p>
         )}
-
-        {/* Control (e.g. Slider) */}
         <div className="w-full pt-1">
           {control}
         </div>
-
-        {/* Helper Text */}
         {helperText && (
-          <p className="text-[10px] font-medium text-gray-400 mt-1">
+          <p className="text-[10px] font-medium text-app-text-muted mt-1">
             {helperText}
           </p>
         )}
@@ -69,27 +62,24 @@ export const SettingsRow: React.FC<SettingsRowProps> = ({
       "py-4 flex flex-col space-y-2 md:space-y-0 md:flex-row md:items-center md:justify-between gap-4 transition-opacity",
       {
         "opacity-50 pointer-events-none": disabled,
-        "border-b border-gray-100": divider,
+        "border-b border-app-border": divider,
       },
       className
     )}>
-      {/* Label and Info */}
       <div className="flex-1 min-w-[200px] space-y-0.5">
-        <div className="text-sm font-medium text-gray-900 tracking-tight">
+        <div className="text-sm font-medium text-app-text-primary tracking-tight">
           {label}
         </div>
         {description && (
-          <p className="text-xs text-gray-500 max-w-[450px] leading-normal">
+          <p className="text-xs text-app-text-secondary max-w-[450px] leading-relaxed">
             {description}
           </p>
         )}
       </div>
-
-      {/* Input Control and Helper Text */}
       <div className="flex flex-col items-stretch md:items-end gap-1.5 min-w-[180px]">
         <div className="w-full flex justify-end">{control}</div>
         {helperText && (
-          <p className="text-[10px] font-medium text-gray-400">
+          <p className="text-[10px] font-medium text-app-text-muted">
             {helperText}
           </p>
         )}
@@ -100,3 +90,4 @@ export const SettingsRow: React.FC<SettingsRowProps> = ({
 
 SettingsRow.displayName = 'SettingsRow';
 export default SettingsRow;
+

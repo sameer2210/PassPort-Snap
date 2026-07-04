@@ -23,3 +23,4 @@ export const PrintHeader: React.FC<PrintHeaderProps> = React.memo(({ state }) =>
 });
 
 PrintHeader.displayName = 'PrintHeader';
+

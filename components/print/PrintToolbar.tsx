@@ -31,7 +31,7 @@ export const PrintToolbar: React.FC<PrintToolbarProps> = React.memo(({ state, ac
             title="Quick Autofill"
             subtitle="Fill all layout slots with selected photo"
             icon={<Sparkles className="w-4 h-4 text-brand-primary" />}
-            className="border border-[#0b1e3a]/8"
+            className="border border-app-border"
           >
             <ActionGroup className="w-full">
               <Button
@@ -49,7 +49,7 @@ export const PrintToolbar: React.FC<PrintToolbarProps> = React.memo(({ state, ac
             title="Layout Settings"
             subtitle="Configure dimensions & border helpers"
             icon={<Settings2 className="w-4 h-4 text-brand-primary" />}
-            className="border border-[#0b1e3a]/8"
+            className="border border-app-border"
           >
             <div className="space-y-1">
               <SettingsRow
@@ -57,7 +57,7 @@ export const PrintToolbar: React.FC<PrintToolbarProps> = React.memo(({ state, ac
                 description="Target size for printing sheet"
                 control={
                   <select
-                    className="w-36 h-9 p-2 border border-brand-border rounded-lg text-xs font-semibold text-gray-700 bg-white focus:ring-2 focus:ring-brand-primary outline-none transition-all duration-150"
+                    className="w-36 h-9 p-2 border border-brand-border rounded-lg text-xs font-semibold text-app-text-secondary bg-white focus:ring-2 focus:ring-brand-primary outline-none transition-all duration-150"
                     value={sheetSizeId}
                     onChange={(e) => onSheetSizeIdChange(e.target.value)}
                   >
@@ -91,7 +91,7 @@ export const PrintToolbar: React.FC<PrintToolbarProps> = React.memo(({ state, ac
       <ActionGroup className="w-full" equalWidth={true}>
         <Button
           variant="outline"
-          className="h-9 text-xs font-semibold border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg transition-all duration-120 cursor-pointer"
+          className="h-9 text-xs font-semibold border-slate-200 hover:bg-slate-50 text-app-text-secondary rounded-lg transition-all duration-120 cursor-pointer"
           onClick={onAddPhoto}
         >
           <Plus className="w-3.5 h-3.5 mr-1" />
@@ -99,7 +99,7 @@ export const PrintToolbar: React.FC<PrintToolbarProps> = React.memo(({ state, ac
         </Button>
         <Button
           variant="outline"
-          className="h-9 text-xs font-semibold border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg transition-all duration-120 cursor-pointer"
+          className="h-9 text-xs font-semibold border-slate-200 hover:bg-slate-50 text-app-text-secondary rounded-lg transition-all duration-120 cursor-pointer"
           onClick={onReset}
         >
           <RotateCcw className="w-3.5 h-3.5 mr-1" />
@@ -107,7 +107,7 @@ export const PrintToolbar: React.FC<PrintToolbarProps> = React.memo(({ state, ac
         </Button>
         <Button
           variant="outline"
-          className="h-9 text-xs font-semibold border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg transition-all duration-120 cursor-pointer"
+          className="h-9 text-xs font-semibold border-slate-200 hover:bg-slate-50 text-app-text-secondary rounded-lg transition-all duration-120 cursor-pointer"
           onClick={onClearWorkspace}
         >
           <Trash2 className="w-3.5 h-3.5 mr-1" />
@@ -119,3 +119,4 @@ export const PrintToolbar: React.FC<PrintToolbarProps> = React.memo(({ state, ac
 });
 
 PrintToolbar.displayName = 'PrintToolbar';
+

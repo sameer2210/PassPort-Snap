@@ -3,12 +3,29 @@
 import React, { useEffect, useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import { cleanupSessions } from '@/lib/storage';
-import { Step1PhotoType } from './Step1PhotoType';
-import { Step2Upload } from './Step2Upload';
-import { Step3Adjust } from './Step3Adjust';
-import { Step4Background } from './Step4Background';
-import { Step5PrintSheet } from './Step5PrintSheet';
+import dynamic from 'next/dynamic';
 import { WizardNavigation } from './WizardNavigation';
+
+const Step1PhotoType = dynamic(() => import('./Step1PhotoType'), {
+  loading: () => <div className="min-h-[400px] flex items-center justify-center text-xs font-semibold text-app-text-muted">Loading Size Templates...</div>,
+  ssr: false,
+});
+const Step2Upload = dynamic(() => import('./Step2Upload'), {
+  loading: () => <div className="min-h-[400px] flex items-center justify-center text-xs font-semibold text-app-text-muted">Loading Upload Workspace...</div>,
+  ssr: false,
+});
+const Step3Adjust = dynamic(() => import('./Step3Adjust'), {
+  loading: () => <div className="min-h-[400px] flex items-center justify-center text-xs font-semibold text-app-text-muted">Loading Photo Adjuster...</div>,
+  ssr: false,
+});
+const Step4Background = dynamic(() => import('./Step4Background'), {
+  loading: () => <div className="min-h-[400px] flex items-center justify-center text-xs font-semibold text-app-text-muted">Loading Neural Background Engine...</div>,
+  ssr: false,
+});
+const Step5PrintSheet = dynamic(() => import('./Step5PrintSheet'), {
+  loading: () => <div className="min-h-[400px] flex items-center justify-center text-xs font-semibold text-app-text-muted">Loading Print Dashboard...</div>,
+  ssr: false,
+});
 
 export function Wizard() {
   const { step } = useAppStore();
@@ -29,7 +46,7 @@ export function Wizard() {
       <WizardNavigation />
 
       {/* Workspace Area */}
-      <section className="flex-1 bg-white border border-[#0b1e3a]/6 rounded-2xl p-5 md:p-6 shadow-sm min-h-[500px] flex flex-col justify-between">
+      <section className="flex-1 bg-white border border-app-border rounded-2xl p-5 md:p-6 shadow-sm min-h-[500px] flex flex-col justify-between">
         <div className="flex-1 flex flex-col justify-center">
           {step === 1 && <Step1PhotoType />}
           {step === 2 && <Step2Upload />}
@@ -42,3 +59,4 @@ export function Wizard() {
   );
 }
 export default Wizard;
+

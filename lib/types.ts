@@ -1,3 +1,5 @@
+import type { BackgroundStatus } from './background/backgroundTypes';
+
 export type PhotoTemplate = {
   id: string;
   label: string;
@@ -25,6 +27,10 @@ export type Person = {
   brightness?: number;
   contrast?: number;
   sharpness?: number;
+  backgroundChoice?: BackgroundChoice;
+  backgroundStatus?: BackgroundStatus;
+  backgroundError?: string | null;
+  processing?: boolean;
 };
 
 export type SheetSize = {

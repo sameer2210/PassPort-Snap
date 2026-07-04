@@ -23,10 +23,10 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
   className,
 }) => {
   const overlayClasses = cn(
-    "flex flex-col items-center justify-center text-center p-6 transition-all duration-300 z-50",
+    "flex flex-col items-center justify-center text-center p-6 transition-opacity duration-200 z-50",
     {
-      "fixed inset-0 bg-white/70": fullscreen,
-      "absolute inset-0 bg-white/80": container && !fullscreen,
+      "fixed inset-0 bg-app-surface/70": fullscreen,
+      "absolute inset-0 bg-app-surface/80": container && !fullscreen,
       "backdrop-blur-[4px]": blur,
       "w-full h-full min-h-[200px]": !fullscreen && !container,
     },
@@ -38,7 +38,6 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
       <div className="flex flex-col items-center space-y-4 max-w-sm">
         {spinner && (
           <div className="relative flex items-center justify-center">
-            {/* Outer spinning ring */}
             <div className="w-12 h-12 rounded-full border-4 border-brand-light border-t-brand-primary animate-spin" />
             {progress !== undefined && (
               <span className="absolute text-xs font-semibold text-brand-accent">
@@ -48,11 +47,10 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
           </div>
         )}
 
-        {/* Progress Bar (if progress is provided and no spinner is active) */}
         {!spinner && progress !== undefined && typeof progress === 'number' && (
           <div className="w-48 h-1.5 bg-brand-light rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-brand-primary transition-all duration-300 rounded-full" 
+            <div
+              className="h-full bg-brand-primary transition-all duration-200 rounded-full"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -61,12 +59,12 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
         {(title || subtitle) && (
           <div className="space-y-1">
             {title && (
-              <h4 className="text-sm font-semibold text-gray-900 tracking-tight">
+              <h4 className="text-sm font-semibold text-app-text-primary tracking-tight">
                 {title}
               </h4>
             )}
             {subtitle && (
-              <p className="text-xs text-gray-500 max-w-[280px] mx-auto">
+              <p className="text-xs text-app-text-secondary max-w-[280px] mx-auto leading-relaxed">
                 {subtitle}
               </p>
             )}
@@ -79,3 +77,4 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
 
 LoadingOverlay.displayName = 'LoadingOverlay';
 export default LoadingOverlay;
+

@@ -41,7 +41,7 @@ export const PrintPreviewSlot: React.FC<PrintPreviewSlotProps> = React.memo(({
     <div
       onClick={() => onSlotClick(index)}
       className={`absolute cursor-pointer transition-colors overflow-hidden ${
-        personId ? 'bg-white shadow-sm' : 'bg-gray-100/50 hover:bg-gray-200'
+        personId ? 'bg-white shadow-sm' : 'bg-slate-100/70 hover:bg-slate-200'
       }`}
       style={{
         left: `${x}px`,
@@ -55,10 +55,12 @@ export const PrintPreviewSlot: React.FC<PrintPreviewSlotProps> = React.memo(({
         <img
           src={imageUrl}
           className="w-full h-full object-cover pointer-events-none"
-          alt={`Slot ${index}`}
+          alt={`Tiled passport photo sheet slot position ${index + 1}`}
+          decoding="async"
+          loading="eager"
         />
       ) : (
-        <div className="absolute inset-0 flex items-center justify-center text-gray-300 pointer-events-none">
+        <div className="absolute inset-0 flex items-center justify-center text-slate-300 pointer-events-none">
           <Plus className="w-5 h-5" />
         </div>
       )}
@@ -67,3 +69,4 @@ export const PrintPreviewSlot: React.FC<PrintPreviewSlotProps> = React.memo(({
 });
 
 PrintPreviewSlot.displayName = 'PrintPreviewSlot';
+
