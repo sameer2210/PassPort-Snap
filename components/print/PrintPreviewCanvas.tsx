@@ -64,7 +64,7 @@ export const PrintPreviewCanvas: React.FC<PrintPreviewCanvasProps> = React.memo(
       {!isSinglePhotoMode ? (
         previewLayout && (
           <div
-            className="bg-white shadow-lg border border-app-border relative transition-all duration-150 flex-shrink-0"
+            className="bg-white shadow-md shadow-black/5 border border-app-border relative transition-all duration-150 flex-shrink-0"
             style={{
               width: `${paperWidthPx}px`,
               height: `${paperHeightPx}px`,
@@ -189,4 +189,5 @@ export const PrintPreviewCanvas: React.FC<PrintPreviewCanvasProps> = React.memo(
 
 PrintPreviewCanvas.displayName = 'PrintPreviewCanvas';
 export default PrintPreviewCanvas;
+
 

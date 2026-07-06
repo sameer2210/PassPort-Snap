@@ -19,7 +19,7 @@ export const PrintExportActions: React.FC<PrintExportActionsProps> = React.memo(
         <ActionGroup orientation="horizontal" responsiveStacking={false}>
           <Button
             variant="outline"
-            className="border-slate-200 hover:bg-slate-50 text-app-text-secondary h-8.5 px-3 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all duration-120"
+            className="border-slate-200 hover:bg-slate-50 text-app-text-secondary h-8.5 px-3 text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition-all duration-120"
             onClick={onPrint}
             disabled={totalPhotosPlaced === 0}
           >
@@ -27,7 +27,7 @@ export const PrintExportActions: React.FC<PrintExportActionsProps> = React.memo(
             Print Layout
           </Button>
           <Button
-            className="bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold h-8.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all duration-120 disabled:opacity-50"
+            className="bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold h-8.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all duration-120 disabled:opacity-50"
             onClick={onDownloadPdf}
             disabled={isGenerating || totalPhotosPlaced === 0}
           >
@@ -43,7 +43,7 @@ export const PrintExportActions: React.FC<PrintExportActionsProps> = React.memo(
         <ActionGroup orientation="horizontal" responsiveStacking={false}>
           <Button
             variant="outline"
-            className="border-slate-200 hover:bg-slate-50 text-app-text-secondary h-8.5 px-3 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all duration-120"
+            className="border-slate-200 hover:bg-slate-50 text-app-text-secondary h-8.5 px-3 text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition-all duration-120"
             onClick={() => onDownloadSingle('image/jpeg')}
             disabled={isGenerating || !selectedPersonId}
           >
@@ -51,7 +51,7 @@ export const PrintExportActions: React.FC<PrintExportActionsProps> = React.memo(
             JPG
           </Button>
           <Button
-            className="bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold h-8.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all duration-120"
+            className="bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold h-8.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all duration-120"
             onClick={() => onDownloadSingle('image/png')}
             disabled={isGenerating || !selectedPersonId}
           >
@@ -69,4 +69,5 @@ export const PrintExportActions: React.FC<PrintExportActionsProps> = React.memo(
 });
 
 PrintExportActions.displayName = 'PrintExportActions';
+
 

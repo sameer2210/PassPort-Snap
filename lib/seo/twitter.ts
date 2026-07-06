@@ -31,6 +31,6 @@ export function buildTwitter(params: TwitterParams = {}): Metadata["twitter"] {
         alt: imageAlt,
       },
     ],
-    creator: "@AntigravityDevs",
+    creator: "@SameerKhan",
   };
 }

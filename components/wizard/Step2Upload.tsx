@@ -15,7 +15,7 @@ export function Step2Upload() {
         const file = acceptedFiles[0];
         const { highResPhotoUrl, previewPhotoUrl } = await processUploadedFile(file);
         const newPersonId = Math.random().toString(36).substring(7);
-        
+
         addPerson(newPersonId, previewPhotoUrl, highResPhotoUrl);
         setStep(3);
       } catch (err) {
@@ -25,7 +25,7 @@ export function Step2Upload() {
     }
   }, [addPerson, setStep]);
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
       'image/jpeg': ['.jpeg', '.jpg'],
@@ -44,12 +44,12 @@ export function Step2Upload() {
           Drop your photo here. For best results, use a well-lit, front-facing portrait with a neutral background.
         </p>
       </div>
-      
-      <div 
-        {...getRootProps()} 
+
+      <div
+        {...getRootProps()}
         className={`border border-dashed rounded-2xl p-12 text-center cursor-pointer transition-all duration-200 select-none
-          ${isDragActive 
-            ? 'border-brand-primary bg-brand-light/35 shadow-sm shadow-blue-500/10 scale-[1.01]' 
+          ${isDragActive
+            ? 'border-brand-primary bg-brand-light/35 shadow-sm shadow-blue-500/10 scale-[1.01]'
             : 'border-slate-200 hover:border-brand-primary/35 hover:bg-brand-light/10 hover:shadow-sm bg-app-background/20'}`}
       >
         <input {...getInputProps()} />
@@ -66,9 +66,9 @@ export function Step2Upload() {
 
       <div className="pt-2 border-t border-app-border flex justify-between items-center">
         <ActionGroup>
-          <Button 
-            variant="outline" 
-            className="border-slate-200 hover:bg-slate-50 text-app-text-secondary h-9 px-4 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all duration-120"
+          <Button
+            variant="outline"
+            className="border-slate-200 hover:bg-slate-50 text-app-text-secondary h-9 px-4 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-all duration-120"
             onClick={() => {
               // Clear choice and go back
               localStorage.removeItem('passport-snap-template');

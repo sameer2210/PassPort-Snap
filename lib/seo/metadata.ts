@@ -72,11 +72,11 @@ export function buildMetadata(params: MetadataBuilderParams = {}): Metadata {
     icons: {
       icon: [
         { url: "/favicon.ico", sizes: "any" },
-        { url: "/icon.png", type: "image/png", sizes: "192x192" },
+        { url: "/icon.png", type: "image/png", sizes: "512x512" },
       ],
       shortcut: ["/favicon.ico"],
       apple: [
-        { url: "/logo.png", sizes: "512x512", type: "image/png" },
+        { url: "/apple-icon.png", sizes: "180x180", type: "image/png" },
       ],
     },
     appleWebApp: {

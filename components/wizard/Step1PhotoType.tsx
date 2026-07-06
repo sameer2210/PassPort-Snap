@@ -103,7 +103,7 @@ export function Step1PhotoType() {
           title="Custom Dimensions"
           subtitle="Configure physical millimeters size"
           icon={<Settings2 className="w-4 h-4 text-brand-primary" />}
-          className={`border transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md
+          className={`border transition-all duration-200 hover:shadow-md hover:shadow-black/5
               ${
                 showCustom
                   ? 'border-brand-primary bg-brand-light/15 ring-1 ring-brand-primary/70'
@@ -125,7 +125,7 @@ export function Step1PhotoType() {
                       ref={widthInputRef}
                       type="text"
                       inputMode="decimal"
-                      className="w-full h-9 rounded-lg border border-brand-border bg-white px-3 py-1.5 text-xs text-right pr-9 font-semibold text-app-text-secondary focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                      className="w-full h-9 rounded-xl border border-brand-border bg-white px-3 py-1.5 text-xs text-right pr-9 font-semibold text-app-text-secondary focus:outline-none focus:ring-2 focus:ring-brand-primary"
                       value={widthInput}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         handleWidthChange(e.target.value)
@@ -147,7 +147,7 @@ export function Step1PhotoType() {
                       id="custom-height"
                       type="text"
                       inputMode="decimal"
-                      className="w-full h-9 rounded-lg border border-brand-border bg-white px-3 py-1.5 text-xs text-right pr-9 font-semibold text-app-text-secondary focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                      className="w-full h-9 rounded-xl border border-brand-border bg-white px-3 py-1.5 text-xs text-right pr-9 font-semibold text-app-text-secondary focus:outline-none focus:ring-2 focus:ring-brand-primary"
                       value={heightInput}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         handleHeightChange(e.target.value)
@@ -164,7 +164,7 @@ export function Step1PhotoType() {
 
               <ActionGroup className="pt-2">
                 <Button
-                  className="w-full bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold h-9 rounded-lg flex items-center justify-center gap-1.5 transition-all duration-120"
+                  className="w-full bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold h-9 rounded-xl flex items-center justify-center gap-1.5 transition-all duration-120"
                   onClick={handleCustomSubmit}
                   disabled={!isCustomValid}
                 >
@@ -214,7 +214,7 @@ export function Step1PhotoType() {
                 title={t.label}
                 subtitle={t.countries}
                 icon={<Globe className="w-4 h-4 text-brand-primary" />}
-                className={`h-full border transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md
+                className={`h-full border transition-all duration-200 hover:shadow-md hover:shadow-black/5
                   ${
                     isSelected
                       ? 'border-brand-primary bg-brand-light/15 ring-1 ring-brand-primary/70'

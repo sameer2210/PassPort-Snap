@@ -36,8 +36,8 @@ export const WizardNavigation: React.FC = () => {
                 onClick={() => canClick && handleStepClick(s.step)}
                 className={cn(
                   "text-xs font-semibold pb-1 border-b-2 transition-all duration-150 flex-shrink-0",
-                  isActive 
-                    ? "border-brand-primary text-brand-primary font-bold" 
+                  isActive
+                    ? "border-brand-primary text-brand-primary font-bold"
                     : "border-transparent text-app-text-muted hover:text-app-text-secondary",
                   !canClick && "opacity-40"
                 )}
@@ -54,4 +54,3 @@ export const WizardNavigation: React.FC = () => {
 
 WizardNavigation.displayName = 'WizardNavigation';
 export default WizardNavigation;
-

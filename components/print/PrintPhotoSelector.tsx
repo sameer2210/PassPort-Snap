@@ -47,13 +47,13 @@ export const PrintPhotoSelector: React.FC<PrintPhotoSelectorProps> = React.memo(
                 {p.finalPhotoUrl ? (
                   <img
                     src={p.finalPhotoUrl}
-                    className="w-10 h-10 object-cover rounded-lg shadow-sm border border-app-border"
+                    className="w-10 h-10 object-cover rounded-xl shadow-sm border border-app-border"
                     alt={`Portrait photo preview selector index ${idx + 1}`}
                     decoding="async"
                     loading="lazy"
                   />
                 ) : (
-                  <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-app-text-muted">
+                  <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-app-text-muted">
                     <Camera className="w-4 h-4" />
                   </div>
                 )}
@@ -71,7 +71,7 @@ export const PrintPhotoSelector: React.FC<PrintPhotoSelectorProps> = React.memo(
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-brand-danger hover:text-red-750 hover:bg-red-50/50 rounded-lg transition-all duration-120 cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-danger focus-visible:outline-none"
+                  className="h-8 w-8 text-brand-danger hover:text-red-750 hover:bg-red-50/50 rounded-xl transition-all duration-120 cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-danger focus-visible:outline-none"
                   onClick={() => onDeletePerson(p.id)}
                   aria-label={`Delete Portrait Photo ${idx + 1}`}
                 >
@@ -94,4 +94,5 @@ export const PrintPhotoSelector: React.FC<PrintPhotoSelectorProps> = React.memo(
 });
 
 PrintPhotoSelector.displayName = 'PrintPhotoSelector';
+
 

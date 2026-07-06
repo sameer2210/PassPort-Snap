@@ -205,7 +205,7 @@ export function Step5PrintSheet() {
           <div className="bg-slate-100 p-1 rounded-xl flex items-center select-none">
             <button
               type="button"
-              className={`flex-1 py-1.5 text-xs font-semibold rounded-lg text-center transition-all duration-150 focus:outline-none cursor-pointer
+              className={`flex-1 py-1.5 text-xs font-semibold rounded-xl text-center transition-all duration-150 focus:outline-none cursor-pointer
                 ${
                   !isSinglePhotoMode
                     ? 'bg-white text-app-text-primary shadow-sm'
@@ -217,7 +217,7 @@ export function Step5PrintSheet() {
             </button>
             <button
               type="button"
-              className={`flex-1 py-1.5 text-xs font-semibold rounded-lg text-center transition-all duration-150 focus:outline-none cursor-pointer
+              className={`flex-1 py-1.5 text-xs font-semibold rounded-xl text-center transition-all duration-150 focus:outline-none cursor-pointer
                 ${
                   isSinglePhotoMode
                     ? 'bg-white text-app-text-primary shadow-sm'

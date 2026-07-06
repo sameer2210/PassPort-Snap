@@ -9,6 +9,8 @@ README.md
 app/globals.css
 app/layout.tsx
 app/page.tsx
+app/robots.ts
+app/sitemap.ts
 components/print/PrintExportActions.tsx
 components/print/PrintHeader.tsx
 components/print/PrintPhotoSelector.tsx
@@ -36,8 +38,6 @@ components/wizard/Wizard.tsx
 components/wizard/WizardNavigation.tsx
 docs/layout-test-cases.md
 eslint.config.mjs
-hooks/imageAdjustmentDefaults.ts
-hooks/imageSharpness.ts
 hooks/useBackgroundRemoval.ts
 hooks/usePrintActions.ts
 hooks/usePrintPreview.ts
@@ -75,6 +75,7 @@ lib/print/renderers/canvasRenderer.ts
 lib/print/renderers/pdfRenderer.ts
 lib/print/services/browserPrintService.ts
 lib/print/services/exportService.ts
+lib/print/services/imagePreparation/Sharpness.ts
 lib/print/services/imagePreparation/background.ts
 lib/print/services/imagePreparation/crop.ts
 lib/print/services/imagePreparation/filters.ts
@@ -89,6 +90,15 @@ lib/print/strategies/singlePhotoStrategy.ts
 lib/print/utils/geometry.ts
 lib/print/utils/math.ts
 lib/print/validation/validators.ts
+lib/seo/canonical.ts
+lib/seo/constants.ts
+lib/seo/metadata.ts
+lib/seo/openGraph.ts
+lib/seo/organization.ts
+lib/seo/schema.ts
+lib/seo/structured-data.ts
+lib/seo/twitter.ts
+lib/seo/website.ts
 lib/storage.ts
 lib/store.ts
 lib/types.ts
@@ -227,10 +237,12 @@ public/assets/models/mediapipe/vision_wasm_module_internal.js
 public/assets/models/mediapipe/vision_wasm_module_internal.wasm
 public/assets/models/mediapipe/vision_wasm_nosimd_internal.js
 public/assets/models/mediapipe/vision_wasm_nosimd_internal.wasm
-public/favicon.ico
-public/icon-192x192.png
-public/icon-512x512.png
+public/icon.png
+public/logo.png
 public/manifest.json
 scripts/download-assets.js
+seo_audit.md
+seo_changes.md
+seo_checklist.md
 tsconfig.json
 types/next-pwa.d.ts

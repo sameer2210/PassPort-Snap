@@ -348,7 +348,7 @@ export function Step3Adjust() {
                     disabled={isProcessing}
                     title="AI Auto Align"
                   >
-                    <Sparkles className="w-3.5 h-3.5 text-blue-600 animate-pulse" />
+                    <Sparkles className="w-3.5 h-3.5 text-brand-primary animate-pulse" />
                     Auto Align
                   </Button>
                   <Button
@@ -379,7 +379,7 @@ export function Step3Adjust() {
                 Back
               </Button>
               <Button
-                className="flex-grow bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold h-10 rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-blue-500/10 transition-all duration-150"
+                className="flex-grow bg-brand-primary hover:bg-brand-hover text-white text-sm font-semibold h-10 rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-blue-500/10 transition-all duration-150"
                 onClick={handleSave}
                 disabled={isProcessing}
               >

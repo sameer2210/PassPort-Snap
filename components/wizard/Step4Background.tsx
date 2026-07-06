@@ -109,7 +109,7 @@ export function Step4Background() {
           <Button
             variant="outline"
             size="sm"
-            className="text-red-700 border-red-200 hover:bg-red-100 h-8 text-[11px] font-bold rounded-lg flex items-center gap-1.5 transition-all duration-120"
+            className="text-red-700 border-red-200 hover:bg-red-100 h-8 text-[11px] font-bold rounded-xl flex items-center gap-1.5 transition-all duration-120"
             onClick={() => processPreview(person.id, backgroundChoice, customColor)}
           >
             <RotateCcw className="w-3 h-3" />
@@ -136,7 +136,7 @@ export function Step4Background() {
             )}
 
             <div
-              className="absolute inset-0 flex items-center justify-center p-4 transition-colors duration-300"
+              className="absolute inset-0 flex items-center justify-center p-4 transition-colors duration-200"
               style={{
                 backgroundColor: backgroundChoice === 'original'
                   ? '#ffffff'
@@ -154,7 +154,7 @@ export function Step4Background() {
                 <img
                   src={imgToUse}
                   alt="Composite passport photo output with background normalized"
-                  className="max-h-full max-w-full object-contain rounded shadow-lg transition-transform duration-200"
+                  className="max-h-full max-w-full object-contain rounded-xl shadow-sm shadow-black/10 transition-transform duration-200"
                   decoding="async"
                   loading="eager"
                 />
@@ -232,7 +232,7 @@ export function Step4Background() {
             <ActionGroup className="w-full">
               <Button
                 variant="outline"
-                className="border-slate-200 hover:bg-slate-50 text-app-text-secondary h-9 px-4 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all duration-120"
+                className="border-slate-200 hover:bg-slate-50 text-app-text-secondary h-9 px-4 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-all duration-120"
                 onClick={() => setStep(3)}
                 disabled={processing}
               >
@@ -240,7 +240,7 @@ export function Step4Background() {
                 Back
               </Button>
               <Button
-                className="flex-1 bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold h-9 rounded-lg flex items-center justify-center gap-1.5 transition-all duration-120"
+                className="flex-1 bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold h-9 rounded-xl flex items-center justify-center gap-1.5 transition-all duration-120"
                 onClick={handleNext}
                 disabled={processing}
               >

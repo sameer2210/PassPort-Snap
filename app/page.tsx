@@ -1,6 +1,7 @@
+/* eslint-disable @next/next/no-img-element */
 import { Wizard } from '@/components/wizard/Wizard';
 import { HeaderWorkflow } from '@/components/wizard/HeaderWorkflow';
-import { Camera, Globe, Shield, Sparkles, Sliders, Printer, HelpCircle } from 'lucide-react';
+import { Globe, Shield, Sparkles, Sliders, Printer, HelpCircle } from 'lucide-react';
 import { getJsonLdString } from '@/lib/seo/structured-data';
 
 export default function Home() {
@@ -16,9 +17,13 @@ export default function Home() {
 
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-app-border px-6 py-3.5 flex items-center justify-between md:grid md:grid-cols-3">
         <div className="flex items-center gap-2.5 select-none justify-self-start">
-          <div className="w-8.5 h-8.5 rounded-lg bg-brand-primary flex items-center justify-center text-white shadow-sm shadow-brand-primary/20">
-            <Camera className="w-4.5 h-4.5" />
-          </div>
+          <img
+            src="/icon.png"
+            alt="Passport Snap Logo"
+            className="w-8.5 h-8.5 rounded-xl object-contain shadow-sm shadow-brand-primary/20"
+            decoding="async"
+            loading="eager"
+          />
           <div>
             <span className="text-base font-bold text-app-text-primary leading-none tracking-tight">Passport Snap</span>
             <span className="text-[10px] font-semibold text-brand-accent/50 uppercase tracking-widest leading-none block mt-0.5">Studio quality</span>
@@ -44,7 +49,7 @@ export default function Home() {
           {/* Main Hero Header */}
           <div className="text-center space-y-4">
             <h1 className="text-3xl md:text-4xl font-extrabold text-app-text-primary tracking-tight">
-              Free AI Passport Photo Maker Online
+              Free AI Passport Photo Maker Online & Offline
             </h1>
             <p className="text-sm md:text-base text-app-text-secondary max-w-2xl mx-auto leading-relaxed">
               Create compliant, high-resolution passport, visa, and ID photos in seconds. PassportSnap operates entirely in your browser using local AI, keeping your personal data completely private and secure.
@@ -54,7 +59,7 @@ export default function Home() {
           {/* Feature Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="p-5 border border-app-border rounded-2xl bg-app-background/30 space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 text-brand-primary flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-brand-light/70 text-brand-primary flex items-center justify-center">
                 <Sparkles className="w-5 h-5" />
               </div>
               <h2 className="text-base font-bold text-app-text-primary">AI Background Removal</h2>
@@ -64,7 +69,7 @@ export default function Home() {
             </div>
 
             <div className="p-5 border border-app-border rounded-2xl bg-app-background/30 space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 text-brand-primary flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-brand-light/70 text-brand-primary flex items-center justify-center">
                 <Sliders className="w-5 h-5" />
               </div>
               <h2 className="text-base font-bold text-app-text-primary">Crop & Resize Templates</h2>
@@ -74,7 +79,7 @@ export default function Home() {
             </div>
 
             <div className="p-5 border border-app-border rounded-2xl bg-app-background/30 space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 text-brand-primary flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-brand-light/70 text-brand-primary flex items-center justify-center">
                 <Printer className="w-5 h-5" />
               </div>
               <h2 className="text-base font-bold text-app-text-primary">Print Sheets & PDF Exports</h2>
@@ -148,7 +153,7 @@ export default function Home() {
               <p className="text-xs text-app-text-secondary leading-relaxed">
                 Unlike online generators that upload and store your images on external servers, PassportSnap processes your photos locally:
               </p>
-              <div className="p-4 bg-blue-50/50 border border-brand-border rounded-xl space-y-2">
+              <div className="p-4 bg-brand-light/50 border border-brand-border rounded-xl space-y-2">
                 <h3 className="text-xs font-bold text-brand-accent">Why Local Execution Matters</h3>
                 <p className="text-[11px] text-app-text-secondary leading-relaxed">
                   By leveraging WebAssembly (WASM) neural model runners (`@imgly/background-removal` ONNX) and MediaPipe Face Detection modules, all biometric centerings and pixel cutouts occur directly inside your browser cache. Once the application loads, you can disconnect your internet and execute the entire pipeline offline.
@@ -225,10 +230,16 @@ export default function Home() {
       </section>
 
       {/* Semantic and Optimized Footer */}
-      <footer className="mt-auto bg-gray-900 border-t border-gray-800 text-app-text-muted py-10 px-6 select-none">
+      <footer className="mt-auto bg-slate-950 border-t border-slate-900 text-app-text-muted py-10 px-6 select-none">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
-            <Camera className="w-5 h-5 text-brand-primary" />
+            <img
+              src="/icon.png"
+              alt="Passport Snap Logo"
+              className="w-5 h-5 object-contain rounded-md"
+              decoding="async"
+              loading="lazy"
+            />
             <span className="text-sm font-bold text-white tracking-wide">PassportSnap</span>
             <span className="text-[10px] text-app-text-secondary font-semibold">• Offline Photo Studio</span>
           </div>
@@ -246,5 +257,3 @@ export default function Home() {
     </div>
   );
 }
-
-
