@@ -93,6 +93,7 @@ export function Step5PrintSheet() {
     selectedPersonId,
     showCutlines,
     updatePerson,
+    isSinglePhotoMode,
   });
 
   // Action footer handlers

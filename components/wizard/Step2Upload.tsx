@@ -49,12 +49,12 @@ export function Step2Upload() {
         {...getRootProps()}
         className={`border border-dashed rounded-2xl p-12 text-center cursor-pointer transition-all duration-200 select-none
           ${isDragActive
-            ? 'border-brand-primary bg-brand-light/35 shadow-sm shadow-blue-500/10 scale-[1.01]'
-            : 'border-slate-200 hover:border-brand-primary/35 hover:bg-brand-light/10 hover:shadow-sm bg-app-background/20'}`}
+            ? 'border-brand-primary bg-brand-light shadow-sm shadow-blue-500/10 scale-[1.01]'
+            : 'border-slate-400 hover:border-brand-primary hover:bg-brand-light hover:shadow-sm bg-brand-light/90'}`}
       >
         <input {...getInputProps()} />
         <div className="flex flex-col items-center space-y-4">
-          <div className="w-14 h-14 rounded-full bg-brand-light text-brand-primary flex items-center justify-center shadow-inner">
+          <div className="w-14 h-14 rounded-full bg-blue-200 text-brand-primary flex items-center justify-center shadow-inner">
             <UploadCloud className="w-6.5 h-6.5" />
           </div>
           <div className="space-y-1">
@@ -68,7 +68,7 @@ export function Step2Upload() {
         <ActionGroup>
           <Button
             variant="outline"
-            className="border-slate-200 hover:bg-slate-50 text-app-text-secondary h-9 px-4 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-all duration-120"
+            className="border-slate-200 bg-stone-300 hover:bg-slate-500 text-app-primary h-9 px-4 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-all duration-120"
             onClick={() => {
               // Clear choice and go back
               localStorage.removeItem('passport-snap-template');
@@ -85,4 +85,3 @@ export function Step2Upload() {
   );
 }
 export default Step2Upload;
-

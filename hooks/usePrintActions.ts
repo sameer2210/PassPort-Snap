@@ -21,6 +21,7 @@ export interface UsePrintActionsInput {
   readonly selectedPersonId: string | null;
   readonly showCutlines: boolean;
   readonly updatePerson: (id: string, updates: Partial<Person>) => void;
+  readonly isSinglePhotoMode: boolean;
 }
 
 export interface UsePrintActionsOutput {
@@ -41,6 +42,7 @@ export function usePrintActions({
   selectedPersonId,
   showCutlines,
   updatePerson,
+  isSinglePhotoMode,
 }: UsePrintActionsInput): UsePrintActionsOutput {
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -123,11 +125,94 @@ export function usePrintActions({
     }
   }, [paper, template, slots, people, showCutlines]);
 
-  const handlePrint = useCallback(() => {
-    if (layout) {
-      BrowserPrintService.print(layout.paperWidthMm, layout.paperHeightMm);
+  const handlePrint = useCallback(async () => {
+    setIsGenerating(true);
+    try {
+      let scene;
+      let widthMm: number;
+      let heightMm: number;
+
+      if (isSinglePhotoMode) {
+        if (!selectedPersonId) return;
+        const selectedPerson = people.find((p) => p.id === selectedPersonId);
+        if (!selectedPerson) return;
+
+        const rawSrc =
+          selectedPerson.highResFinalUrl ||
+          selectedPerson.finalPhotoUrl ||
+          selectedPerson.croppedPhotoUrl ||
+          selectedPerson.previewPhotoUrl ||
+          '';
+
+        const adjustments: ImageAdjustments = {
+          rotation: 0,
+          brightness: 1,
+          contrast: 1,
+          cropArea: undefined,
+          backgroundColor: undefined,
+          sharpenAmount: 0.15,
+        };
+
+        scene = await PrintController.buildSinglePhotoScene(template, rawSrc, adjustments);
+        widthMm = template.widthMm;
+        heightMm = template.heightMm;
+      } else {
+        if (!layout) return;
+
+        // Build imagesMap (on-demand, not state/memoized)
+        const imagesMap: Record<string, string> = {};
+        people.forEach((p) => {
+          const url = p.highResFinalUrl || p.finalPhotoUrl || p.croppedPhotoUrl || p.previewPhotoUrl;
+          if (url) {
+            imagesMap[p.id] = url;
+          }
+        });
+
+        // Build adjustmentsMap (on-demand, not state/memoized)
+        const adjustmentsMap: Record<string, ImageAdjustments> = {};
+        people.forEach((p) => {
+          adjustmentsMap[p.id] = {
+            rotation: 0,
+            brightness: 1,
+            contrast: 1,
+            cropArea: undefined,
+            backgroundColor: undefined,
+            sharpenAmount: 0.15,
+          };
+        });
+
+        scene = await PrintController.buildScene({
+          paper,
+          template,
+          slots,
+          images: imagesMap,
+          adjustments: adjustmentsMap,
+          addBorder: PRINT_DEFAULTS.addBorder,
+          showCutlines,
+        });
+
+        widthMm = layout.paperWidthMm;
+        heightMm = layout.paperHeightMm;
+      }
+
+      const imgBlob = await PrintController.exportImage(scene, 'image/png');
+      await BrowserPrintService.print(imgBlob, widthMm, heightMm);
+    } catch (err) {
+      console.error(err);
+      alert((err as Error).message || 'Failed to print. Please try again.');
+    } finally {
+      setIsGenerating(false);
     }
-  }, [layout]);
+  }, [
+    isSinglePhotoMode,
+    selectedPersonId,
+    people,
+    template,
+    layout,
+    paper,
+    slots,
+    showCutlines,
+  ]);
 
   const handleDownloadSingle = useCallback(
     async (format: 'image/jpeg' | 'image/png') => {
