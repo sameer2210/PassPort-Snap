@@ -11,6 +11,8 @@ import { useAppStore } from '@/lib/store';
 import { useCallback, useEffect, useState, useMemo } from 'react';
 import { PRINT_DEFAULTS } from '@/lib/constants/printDefaults';
 import { buildReverseFilledSlots } from '@/lib/print/utils/slotAllocator';
+import { Plus } from 'lucide-react';
+import { Button } from '../ui/button';
 
 export function Step5PrintSheet() {
   const {
@@ -50,6 +52,44 @@ export function Step5PrintSheet() {
 
   const layout = layoutResult.success ? layoutResult.layout : null;
   const capacity = layout ? layout.capacity : 0;
+
+  // Centralized safe count update handler enforcing global sheet capacity
+  const handleUpdateCount = useCallback(
+    (id: string, requestedCount: number) => {
+      if (capacity <= 0) return;
+      const target = people.find((p) => p.id === id);
+      if (!target) return;
+
+      const otherPeopleTotal = people
+        .filter((p) => p.id !== id)
+        .reduce((acc, p) => acc + p.count, 0);
+
+      const maxAllowed = Math.max(0, capacity - otherPeopleTotal);
+      const safeCount = Math.min(Math.max(0, requestedCount), maxAllowed);
+
+      if (target.count !== safeCount) {
+        updatePerson(id, { count: safeCount });
+      }
+    },
+    [capacity, people, updatePerson]
+  );
+
+  // Normalize total copy counts when paper or template changes to a smaller capacity
+  useEffect(() => {
+    if (capacity <= 0 || people.length === 0) return;
+    const currentTotal = people.reduce((acc, p) => acc + p.count, 0);
+    if (currentTotal > capacity) {
+      let overflow = currentTotal - capacity;
+      for (let i = people.length - 1; i >= 0 && overflow > 0; i--) {
+        const p = people[i];
+        if (p.count > 0) {
+          const reduction = Math.min(p.count, overflow);
+          updatePerson(p.id, { count: p.count - reduction });
+          overflow -= reduction;
+        }
+      }
+    }
+  }, [capacity, people, updatePerson]);
 
   // Derive allSlots for multi-page export and previewSlots for Page 1 preview
   const allSlots = useMemo(() => {
@@ -196,7 +236,18 @@ export function Step5PrintSheet() {
         <div className="flex-1 min-h-[550px] flex flex-col items-stretch">
           <PreviewContainer
             title="Tiled Layout Canvas"
-            toolbar={<PrintExportActions state={exportState} actions={exportActions} />}
+            toolbar={
+              !isSinglePhotoMode ? (
+                <Button
+                  size="sm"
+                  className="bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold h-8 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all duration-120 cursor-pointer"
+                  onClick={handleAutoFill}
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  AutoFill Grid
+                </Button>
+              ) : null
+            }
             footer={<PrintHeader state={exportState} />}
             aspectRatio=""
             className="flex-1 h-full w-full select-none"
@@ -245,7 +296,11 @@ export function Step5PrintSheet() {
               isSinglePhotoMode={isSinglePhotoMode}
               onSelectPerson={handleSelectPerson}
               onDeletePerson={handleDeletePerson}
+              onUpdateCount={handleUpdateCount}
+              maxCapacity={capacity}
             />
+            <PrintExportActions state={exportState} actions={exportActions} />
+
           </div>
         </div>
       </div>
@@ -253,4 +308,3 @@ export function Step5PrintSheet() {
   );
 }
 export default Step5PrintSheet;
-

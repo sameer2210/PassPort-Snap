@@ -1,9 +1,8 @@
-/* eslint-disable @next/next/no-img-element */
 import React from 'react';
 import type { Person } from '@/lib/types';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Image as ImageIcon, Camera, Trash2 } from 'lucide-react';
+import { Image as ImageIcon, Camera, Trash2, Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export interface PrintPhotoSelectorProps {
@@ -13,16 +12,24 @@ export interface PrintPhotoSelectorProps {
   readonly isSinglePhotoMode: boolean;
   readonly onSelectPerson: (id: string) => void;
   readonly onDeletePerson: (id: string) => void;
+  readonly onUpdateCount: (id: string, count: number) => void;
+  readonly maxCapacity?: number;
 }
 
 export const PrintPhotoSelector: React.FC<PrintPhotoSelectorProps> = React.memo(({
   people,
   selectedPersonId,
-  slots,
+  slots: _slots,
   isSinglePhotoMode,
   onSelectPerson,
   onDeletePerson,
+  onUpdateCount,
+  maxCapacity = 0,
 }) => {
+  const totalAssignedCopies = people.reduce((acc, x) => acc + x.count, 0);
+  const remainingSlots = maxCapacity > 0 ? maxCapacity - totalAssignedCopies : 0;
+  const isPlusDisabled = maxCapacity > 0 && remainingSlots <= 0;
+
   return (
     <SectionCard
       title="Photo Selector"
@@ -62,17 +69,54 @@ export const PrintPhotoSelector: React.FC<PrintPhotoSelectorProps> = React.memo(
                   <p className="text-[10px] text-app-text-muted mt-0.5 leading-none">Ready for export</p>
                 </div>
               </div>
-              <div className="flex items-center gap-1.5 pr-1" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center gap-2 pr-1" onClick={(e) => e.stopPropagation()}>
                 {!isSinglePhotoMode && (
-                  <span className="text-[10px] font-bold text-brand-accent bg-brand-light px-2.5 py-0.5 rounded-full border border-brand-border select-none">
-                    {slots.filter((s) => s === p.id).length} Placed
-                  </span>
+                  <div className="flex items-center bg-brand-light/60 border border-brand-border rounded-xl p-0.5 select-none">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      type="button"
+                      disabled={p.count === 0}
+                      className="h-6 w-6 rounded-lg text-app-text-secondary hover:text-app-text-primary hover:bg-white/80 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer disabled:cursor-not-allowed transition-all"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (p.count > 0) {
+                          onUpdateCount(p.id, p.count - 1);
+                        }
+                      }}
+                      aria-label={`Decrease copies for Portrait Photo ${idx + 1}`}
+                    >
+                      <Minus className="w-3 h-3" />
+                    </Button>
+                    <span className="w-7 text-center font-bold text-xs text-brand-accent tabular-nums">
+                      {p.count}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      type="button"
+                      disabled={isPlusDisabled}
+                      className="h-6 w-6 rounded-lg text-app-text-secondary hover:text-app-text-primary hover:bg-white/80 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer disabled:cursor-not-allowed transition-all"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!isPlusDisabled) {
+                          onUpdateCount(p.id, p.count + 1);
+                        }
+                      }}
+                      aria-label={`Increase copies for Portrait Photo ${idx + 1}`}
+                    >
+                      <Plus className="w-3 h-3" />
+                    </Button>
+                  </div>
                 )}
                 <Button
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 text-brand-danger hover:text-red-750 hover:bg-red-50/50 rounded-xl transition-all duration-120 cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-danger focus-visible:outline-none"
-                  onClick={() => onDeletePerson(p.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeletePerson(p.id);
+                  }}
                   aria-label={`Delete Portrait Photo ${idx + 1}`}
                 >
                   <Trash2 className="w-3.5 h-3.5" />

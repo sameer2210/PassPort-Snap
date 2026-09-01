@@ -26,16 +26,6 @@ export const PrintToolbar: React.FC<PrintToolbarProps> = React.memo(({ state, ac
     <div className="space-y-4 select-none">
       {!isSinglePhotoMode && (
         <>
-            <ActionGroup className="w-full">
-              <Button
-                className="w-full bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold h-9 rounded-xl flex items-center justify-center gap-1.5 transition-all duration-120"
-                onClick={onAutoFill}
-              >
-                <Plus className="w-3.5 h-3.5" />
-                AutoFill Grid
-              </Button>
-            </ActionGroup>
-
           {/* Layout Settings */}
           <SectionCard
             title="Layout Settings"
