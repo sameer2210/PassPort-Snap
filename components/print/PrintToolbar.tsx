@@ -26,13 +26,6 @@ export const PrintToolbar: React.FC<PrintToolbarProps> = React.memo(({ state, ac
     <div className="space-y-4 select-none">
       {!isSinglePhotoMode && (
         <>
-          {/* Quick Actions */}
-          <SectionCard
-            title="Quick Autofill"
-            subtitle="Fill all layout slots with selected photo"
-            icon={<Sparkles className="w-4 h-4 text-brand-primary" />}
-            className="border border-app-border"
-          >
             <ActionGroup className="w-full">
               <Button
                 className="w-full bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold h-9 rounded-xl flex items-center justify-center gap-1.5 transition-all duration-120"
@@ -42,7 +35,6 @@ export const PrintToolbar: React.FC<PrintToolbarProps> = React.memo(({ state, ac
                 AutoFill Grid
               </Button>
             </ActionGroup>
-          </SectionCard>
 
           {/* Layout Settings */}
           <SectionCard
