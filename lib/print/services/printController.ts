@@ -33,9 +33,17 @@ export const PrintController = {
     const preparedImagesMap: Record<string, string> = {};
     await Promise.all(
       slots.map(async (slotId) => {
-        if (slotId && images[slotId]) {
+        if (slotId) {
+          const rawImage = images[slotId];
+          if (!rawImage) {
+            throw new Error(`Customer photo source missing for assigned slot (${slotId}).`);
+          }
           const adj = adjustments[slotId] || { rotation: 0, brightness: 1, contrast: 1 };
-          preparedImagesMap[slotId] = await prepareImage(images[slotId], template, adj);
+          const prepared = await prepareImage(rawImage, template, adj);
+          if (!prepared) {
+            throw new Error(`Failed to prepare customer photo for slot (${slotId}).`);
+          }
+          preparedImagesMap[slotId] = prepared;
         }
       })
     );
@@ -54,7 +62,13 @@ export const PrintController = {
     photoSrc: string,
     adjustments: ImageAdjustments
   ): Promise<RenderScene> => {
+    if (!photoSrc) {
+      throw new Error('Customer photo source missing for single photo export.');
+    }
     const prepared = await prepareImage(photoSrc, template, adjustments);
+    if (!prepared) {
+      throw new Error('Failed to prepare single photo image.');
+    }
     const slots = ['single-slot'];
     const images = { 'single-slot': prepared };
 

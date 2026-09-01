@@ -9,6 +9,7 @@ import {
 } from '@/lib/print';
 import type { ImageAdjustments } from '@/lib/print';
 import type { Person } from '@/lib/types';
+import { resolveExportPhotoUrl } from '@/lib/print/utils/imageResolver';
 
 import { PRINT_DEFAULTS } from '@/lib/constants/printDefaults';
 
@@ -83,14 +84,14 @@ export function usePrintActions({
   const handleDownloadPdf = useCallback(async () => {
     setIsGenerating(true);
     try {
-      // Build imagesMap (on-demand, not state/memoized)
+      // Build imagesMap asynchronously using validated high-resolution photo resolver
       const imagesMap: Record<string, string> = {};
-      people.forEach((p) => {
-        const url = p.highResFinalUrl || p.finalPhotoUrl || p.croppedPhotoUrl || p.previewPhotoUrl;
+      for (const p of people) {
+        const url = await resolveExportPhotoUrl(p);
         if (url) {
           imagesMap[p.id] = url;
         }
-      });
+      }
 
       // Build adjustmentsMap (on-demand, not state/memoized)
       const adjustmentsMap: Record<string, ImageAdjustments> = {};
@@ -119,7 +120,7 @@ export function usePrintActions({
       DownloadAdapter.downloadBlob(pdfBlob, `passport-photos-${paper.id}.pdf`);
     } catch (err) {
       console.error(err);
-      alert('Failed to generate PDF sheet. Please check your photos and try again.');
+      alert((err as Error).message || 'Failed to generate PDF sheet. Please check your photos and try again.');
     } finally {
       setIsGenerating(false);
     }
@@ -137,12 +138,10 @@ export function usePrintActions({
         const selectedPerson = people.find((p) => p.id === selectedPersonId);
         if (!selectedPerson) return;
 
-        const rawSrc =
-          selectedPerson.highResFinalUrl ||
-          selectedPerson.finalPhotoUrl ||
-          selectedPerson.croppedPhotoUrl ||
-          selectedPerson.previewPhotoUrl ||
-          '';
+        const rawSrc = await resolveExportPhotoUrl(selectedPerson);
+        if (!rawSrc) {
+          throw new Error('Failed to load customer photo for single photo print.');
+        }
 
         const adjustments: ImageAdjustments = {
           rotation: 0,
@@ -159,14 +158,14 @@ export function usePrintActions({
       } else {
         if (!layout) return;
 
-        // Build imagesMap (on-demand, not state/memoized)
+        // Build imagesMap asynchronously using validated high-resolution photo resolver
         const imagesMap: Record<string, string> = {};
-        people.forEach((p) => {
-          const url = p.highResFinalUrl || p.finalPhotoUrl || p.croppedPhotoUrl || p.previewPhotoUrl;
+        for (const p of people) {
+          const url = await resolveExportPhotoUrl(p);
           if (url) {
             imagesMap[p.id] = url;
           }
-        });
+        }
 
         // Build adjustmentsMap (on-demand, not state/memoized)
         const adjustmentsMap: Record<string, ImageAdjustments> = {};
@@ -222,12 +221,10 @@ export function usePrintActions({
         const selectedPerson = people.find((p) => p.id === selectedPersonId);
         if (!selectedPerson) return;
 
-        const rawSrc =
-          selectedPerson.highResFinalUrl ||
-          selectedPerson.finalPhotoUrl ||
-          selectedPerson.croppedPhotoUrl ||
-          selectedPerson.previewPhotoUrl ||
-          '';
+        const rawSrc = await resolveExportPhotoUrl(selectedPerson);
+        if (!rawSrc) {
+          throw new Error('Failed to load customer photo for single photo export.');
+        }
 
         const adjustments: ImageAdjustments = {
           rotation: 0,
@@ -244,7 +241,7 @@ export function usePrintActions({
         DownloadAdapter.downloadBlob(imgBlob, `passport-photo-${selectedPersonId}.${ext}`);
       } catch (err) {
         console.error(err);
-        alert('Failed to export image. Please try again.');
+        alert((err as Error).message || 'Failed to export image. Please try again.');
       } finally {
         setIsGenerating(false);
       }

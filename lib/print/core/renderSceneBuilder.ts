@@ -1,5 +1,6 @@
 import { LayoutResult, RenderScene, SceneItem, BorderItem, CutLineItem } from '../contracts/types';
 import { PRINT_ENGINE_VERSION } from '../constants/printConstants';
+import { RenderError } from '../contracts/errors';
 
 export interface SceneBuildOptions {
   readonly layout: LayoutResult;
@@ -33,6 +34,9 @@ export const RenderSceneBuilder = {
 
     coordinates.forEach((coord, idx) => {
       const slotRef = slots[idx];
+      if (slotRef && (!images[slotRef] || images[slotRef].trim() === '')) {
+        throw new RenderError(`Missing prepared image data for assigned slot position ${idx + 1}`);
+      }
       const imageRef = (slotRef && images[slotRef]) ? images[slotRef] : '';
 
       items.push({
