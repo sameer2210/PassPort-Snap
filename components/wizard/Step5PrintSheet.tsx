@@ -10,6 +10,7 @@ import { PaperRegistry, TemplateRegistry, PrintController } from '@/lib/print';
 import { useAppStore } from '@/lib/store';
 import { useCallback, useEffect, useState, useMemo } from 'react';
 import { PRINT_DEFAULTS } from '@/lib/constants/printDefaults';
+import { buildReverseFilledSlots } from '@/lib/print/utils/slotAllocator';
 
 export function Step5PrintSheet() {
   const {
@@ -50,27 +51,32 @@ export function Step5PrintSheet() {
   const layout = layoutResult.success ? layoutResult.layout : null;
   const capacity = layout ? layout.capacity : 0;
 
-  // Derive slots using useMemo instead of useEffect state
-  const slots = useMemo(() => {
+  // Derive allSlots for multi-page export and previewSlots for Page 1 preview
+  const allSlots = useMemo(() => {
     if (capacity <= 0) return [];
-    const newSlots = Array(capacity).fill(null);
-    let currentIndex = 0;
+    const assignedIds: string[] = [];
     people.forEach((p) => {
       for (let i = 0; i < p.count; i++) {
-        if (currentIndex < capacity) {
-          newSlots[currentIndex] = p.id;
-          currentIndex++;
-        }
+        assignedIds.push(p.id);
       }
     });
-    return newSlots;
+    return buildReverseFilledSlots(assignedIds, capacity);
   }, [capacity, people]);
+
+  const previewSlots = useMemo(() => {
+    if (capacity <= 0) return [];
+    const firstPage = allSlots.slice(0, capacity);
+    while (firstPage.length < capacity) {
+      firstPage.push(null);
+    }
+    return firstPage;
+  }, [capacity, allSlots]);
 
   // Hook 1: Preview Scene & Dimension Calculations
   const { previewScene, previewDimensions } = usePrintPreview({
     paper,
     template,
-    slots,
+    slots: previewSlots,
     settings: { showCutlines },
   });
 
@@ -88,7 +94,7 @@ export function Step5PrintSheet() {
     paper,
     template,
     layout,
-    slots,
+    slots: allSlots,
     people,
     selectedPersonId,
     showCutlines,
@@ -125,7 +131,7 @@ export function Step5PrintSheet() {
     setSelectedPersonId(id);
   }, []);
 
-  const totalPhotosPlaced = slots.filter(Boolean).length;
+  const totalPhotosPlaced = allSlots.filter(Boolean).length;
 
   // Group props for clean interfaces
   const toolbarState = {
@@ -163,7 +169,7 @@ export function Step5PrintSheet() {
     previewLayout: previewScene,
     layout,
     template,
-    slots,
+    slots: previewSlots,
     people,
     selectedPersonId,
     showCutlines,
@@ -235,7 +241,7 @@ export function Step5PrintSheet() {
             <PrintPhotoSelector
               people={people}
               selectedPersonId={selectedPersonId}
-              slots={slots}
+              slots={allSlots}
               isSinglePhotoMode={isSinglePhotoMode}
               onSelectPerson={handleSelectPerson}
               onDeletePerson={handleDeletePerson}

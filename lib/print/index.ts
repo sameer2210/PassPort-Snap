@@ -30,3 +30,5 @@ export * from './adapters/storageAdapter';
 export * from './strategies/printStrategy';
 export * from './strategies/gridPrintStrategy';
 export * from './strategies/singlePhotoStrategy';
+
+export * from './utils/slotAllocator';
