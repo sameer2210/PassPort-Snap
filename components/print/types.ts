@@ -8,6 +8,8 @@ export interface ToolbarState {
   readonly paperSizes: readonly PaperSize[];
 }
 
+
+
 export interface ToolbarActions {
   readonly onSheetSizeIdChange: (id: string) => void;
   readonly onShowCutlinesChange: (show: boolean) => void;
